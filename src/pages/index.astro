@@ -1,97 +1,177 @@
 ---
-import { Show, SignInButton } from "@clerk/astro/components";
+import { SignInButton } from "@clerk/astro/components";
+import { eq } from "drizzle-orm";
 
-import { Header } from "../components/Header";
+import { CrafterStationLogo } from "../components/CrafterStationLogo";
+import Header from "../components/Header.astro";
 import Layout from "../layouts/Layout.astro";
+import { db } from "../db";
+import { challenges, rounds, votes } from "../db/schema";
 
 const { userId } = Astro.locals.auth();
+const isSignedIn = !!userId;
+
+// If signed in, compute the round we should resume on and total progress.
+let resumeSlug: string | null = null;
+let resumeRoundName: string | null = null;
+let totalVoted = 0;
+
+if (isSignedIn && userId) {
+  try {
+    const rows = await db
+      .select({
+        roundId: challenges.roundId,
+        challengeId: votes.challengeId,
+      })
+      .from(votes)
+      .innerJoin(challenges, eq(votes.challengeId, challenges.id))
+      .where(eq(votes.userId, userId));
+
+    totalVoted = rows.length;
+
+    const countByRoundId: Record<number, number> = {};
+    for (const r of rows) {
+      countByRoundId[r.roundId] = (countByRoundId[r.roundId] ?? 0) + 1;
+    }
+
+    const allRounds = await db
+      .select({
+        id: rounds.id,
+        slug: rounds.slug,
+        name: rounds.name,
+        position: rounds.position,
+      })
+      .from(rounds)
+      .orderBy(rounds.position);
+
+    // Pick the first round with progress > 0 and < 10 (in progress).
+    // Fallback to the first round with 0 progress (untouched).
+    const inProgress = allRounds.find(
+      (r) => (countByRoundId[r.id] ?? 0) > 0 && (countByRoundId[r.id] ?? 0) < 10,
+    );
+    const untouched = allRounds.find((r) => (countByRoundId[r.id] ?? 0) === 0);
+    const target = inProgress ?? untouched;
+    if (target) {
+      resumeSlug = target.slug;
+      resumeRoundName = target.name;
+    }
+  } catch {
+    // Silent — fallback to default Start voting.
+  }
+}
+
+const hasProgress = totalVoted > 0 && totalVoted < 60;
+const isFullyDone = totalVoted >= 60;
 ---
 
 <Layout title="css-bash">
-  <Header isSignedIn={!!userId} client:load />
+  <div class="landing-bg flex h-screen flex-col overflow-hidden relative">
+    <Header isSignedIn={isSignedIn} />
 
-  <main style="max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;">
-    <section
-      style="min-height: calc(100vh - 56px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2rem; padding: 4rem 0;"
-    >
-      <div
-        style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.75rem; color: var(--fg-dim); font-weight: 500;"
-      >
-        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block;"></span>
-        Crafter Station &middot; Community Benchmark
-      </div>
+    <main class="relative z-[1] mx-auto flex w-full max-w-[1280px] flex-1 items-center justify-center overflow-hidden px-4 sm:px-6">
+      <section class="flex w-full flex-col items-center justify-center gap-4 text-center">
+        <div class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3.5 py-1 text-xs font-medium text-[var(--fg-dim)]">
+          <CrafterStationLogo className="h-3 w-3" variant="icon" colorScheme="gold" mode="light" />
+          Crafter Station . Community Benchmark
+        </div>
 
-      <div style="max-width: 680px;">
-        <h1
-          style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.04em; margin: 0 0 1.5rem;"
-        >
-          Which AI writes
-          <span style="color: var(--amber);">better CSS</span>?
-        </h1>
-        <p style="font-size: 1.125rem; color: var(--fg-dim); line-height: 1.7; margin: 0;">
-          10 modern CSS challenges. Two anonymous agents. One voted winner.
-          We ran <strong style="color: var(--fg);">Codex with the css-bash MCP</strong> and without it &mdash; now you decide which output is stronger.
-        </p>
-      </div>
+        <div class="max-w-[680px]">
+          <h1 class="m-0 mb-3 text-[clamp(1.85rem,5.5vw,3.5rem)] font-extrabold leading-[1.1] tracking-[-0.04em]">
+            Which AI writes
+            <span class="text-[var(--amber)]">better CSS</span>?
+          </h1>
+          <p class="m-0 text-sm sm:text-base text-[var(--fg-dim)] leading-[1.6]">
+            60 modern CSS challenges across 6 themed rounds. Two anonymous agents per challenge.
+            We ran <strong class="text-[var(--fg)]">Codex with the css-bash MCP</strong>
+            and without it. You decide which output is stronger.
+          </p>
+        </div>
 
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-        <Show when="isSignedOut">
-          <SignInButton mode="redirect" redirectUrl="/vote">
-            <button
-              type="button"
-              style="padding: 12px 28px; background: var(--fg); color: var(--bg); border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -0.01em;"
-            >
-              Sign in to vote
-            </button>
-          </SignInButton>
-        </Show>
-        <Show when="isSignedIn">
+        {isSignedIn && hasProgress && resumeSlug && (
+          <div class="w-full max-w-[420px]">
+            <div class="mb-2 flex items-center justify-between text-xs text-[var(--fg-dim)]">
+              <span>Your progress</span>
+              <span><strong class="text-[var(--fg)]">{totalVoted}</strong> / 60 votes</span>
+            </div>
+            <div class="h-1.5 overflow-hidden rounded-full bg-[var(--bg-secondary)] border border-[var(--line)]">
+              <div class="h-full bg-gradient-to-r from-[var(--amber)] to-[var(--sky)] transition-[width] duration-300" style={`width: ${(totalVoted / 60) * 100}%`}></div>
+            </div>
+          </div>
+        )}
+
+        <div class="flex flex-wrap justify-center gap-3">
+          {isSignedIn ? (
+            isFullyDone ? (
+              <a
+                href="/results"
+                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
+              >
+                See your results
+              </a>
+            ) : hasProgress && resumeSlug ? (
+              <a
+                href={`/vote?round=${resumeSlug}`}
+                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
+              >
+                Continue: {resumeRoundName}
+              </a>
+            ) : (
+              <a
+                href="/vote"
+                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
+              >
+                Start voting
+              </a>
+            )
+          ) : (
+            <SignInButton mode="modal" forceRedirectUrl="/vote" signUpForceRedirectUrl="/vote" asChild>
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] hover:opacity-90 transition-opacity"
+              >
+                Sign in to vote
+              </button>
+            </SignInButton>
+          )}
           <a
-            href="/vote"
-            style="padding: 12px 28px; background: var(--fg); color: var(--bg); border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -0.01em; text-decoration: none;"
+            href="/results"
+            class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
           >
-            Start voting &rarr;
+            See results
           </a>
-        </Show>
-        <a
-          href="/results"
-          style="padding: 12px 28px; background: none; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none;"
-        >
-          See results
-        </a>
-      </div>
+        </div>
 
-      <div
-        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; width: 100%; max-width: 560px; margin-top: 2rem;"
-      >
-        <div style="background: var(--bg-secondary); padding: 1.25rem; text-align: center;">
-          <div style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em;">10</div>
-          <div style="font-size: 0.8rem; color: var(--fg-dim); margin-top: 4px;">Challenges</div>
+        <div class="flex w-full max-w-[640px] flex-wrap items-baseline justify-center gap-x-6 gap-y-2 text-[var(--fg-dim)] text-sm">
+          <span class="inline-flex items-baseline gap-1.5">
+            <span class="text-xl font-extrabold tracking-[-0.04em] text-[var(--fg)]">6</span>
+            rounds
+          </span>
+          <span class="text-[var(--line)]">.</span>
+          <span class="inline-flex items-baseline gap-1.5">
+            <span class="text-xl font-extrabold tracking-[-0.04em] text-[var(--amber)]">60</span>
+            challenges
+          </span>
+          <span class="text-[var(--line)]">.</span>
+          <span class="inline-flex items-baseline gap-1.5">
+            <span class="text-xl font-extrabold tracking-[-0.04em] text-[var(--sky)]">120</span>
+            outputs
+          </span>
         </div>
-        <div style="background: var(--bg-secondary); padding: 1.25rem; text-align: center;">
-          <div style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; color: var(--amber);">2</div>
-          <div style="font-size: 0.8rem; color: var(--fg-dim); margin-top: 4px;">Anonymous agents</div>
-        </div>
-        <div style="background: var(--bg-secondary); padding: 1.25rem; text-align: center;">
-          <div style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; color: var(--sky);">Blind</div>
-          <div style="font-size: 0.8rem; color: var(--fg-dim); margin-top: 4px;">Voting</div>
-        </div>
-      </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 560px;">
-        <div
-          style="padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; text-align: left; background: var(--bg-secondary);"
-        >
-          <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--amber); text-transform: uppercase; margin-bottom: 8px;">Variant A</div>
-          <div style="font-size: 0.875rem; color: var(--fg);">Codex with css-bash MCP &mdash; access to fresh CSS docs at inference time</div>
+        <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3 py-1 text-[var(--fg-dim)]">
+            <span class="h-1.5 w-1.5 rounded-full bg-[var(--amber)]"></span>
+            With css-bash MCP
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3 py-1 text-[var(--fg-dim)]">
+            <span class="h-1.5 w-1.5 rounded-full bg-[var(--sky)]"></span>
+            Without MCP
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3 py-1 text-[var(--fg-dim)]">
+            Blind voting
+          </span>
         </div>
-        <div
-          style="padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; text-align: left; background: var(--bg-secondary);"
-        >
-          <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--sky); text-transform: uppercase; margin-bottom: 8px;">Variant B</div>
-          <div style="font-size: 0.875rem; color: var(--fg);">Codex without MCP &mdash; relies on training data alone, no live docs</div>
-        </div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 </Layout>

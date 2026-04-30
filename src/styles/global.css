@@ -37,3 +37,58 @@ body {
   background-color: var(--bg);
   color: var(--fg);
 }
+
+/* Landing dot pattern - only on index, applied via .landing-bg wrapper */
+.landing-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle, var(--fg) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.06;
+}
+
+[data-theme="dark"] .landing-bg::before {
+  opacity: 0.04;
+}
+
+/* Shiki code blocks - theme via data-theme attribute */
+.shiki {
+  background: transparent;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  font-family:
+    ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas,
+    "DejaVu Sans Mono", monospace;
+}
+
+[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}
+
+[data-theme="light"] .shiki span,
+:root:not([data-theme]) .shiki span {
+  color: var(--shiki-light, var(--shiki-default));
+}
+
+/* Mobile responsive helpers */
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .variant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-section {
+    gap: 1.25rem;
+    padding: 1rem 0;
+  }
+}

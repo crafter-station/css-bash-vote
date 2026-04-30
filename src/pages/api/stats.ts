@@ -1,12 +1,38 @@
 import type { APIRoute } from "astro";
 
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 
 import { db } from "../../db";
-import { votes } from "../../db/schema";
+import { challenges, votes } from "../../db/schema";
+import {
+  getChallengesForRound,
+  getFirstLiveRound,
+  getRoundBySlug,
+} from "../../lib/data";
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ url }) => {
   try {
+    const roundSlug = url.searchParams.get("round");
+
+    const round = roundSlug
+      ? await getRoundBySlug(roundSlug)
+      : await getFirstLiveRound();
+
+    let challengeIds: string[] = [];
+    if (round) {
+      const roundChallenges = await getChallengesForRound(round.id);
+      challengeIds = roundChallenges.map((c) => c.id);
+    } else {
+      const all = await db.select({ id: challenges.id }).from(challenges);
+      challengeIds = all.map((c) => c.id);
+    }
+
+    if (challengeIds.length === 0) {
+      return new Response(JSON.stringify({ stats: {}, totalVotes: 0 }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const rows = await db
       .select({
         challengeId: votes.challengeId,
@@ -14,6 +40,7 @@ export const GET: APIRoute = async () => {
         count: sql<number>`cast(count(*) as int)`,
       })
       .from(votes)
+      .where(inArray(votes.challengeId, challengeIds))
       .groupBy(votes.challengeId, votes.choice);
 
     const stats: Record<

@@ -9,14 +9,547 @@ if (!userId) {
 ---
 
 <Layout title="Vote">
-  <div id="vote-app" style="min-height: 100vh; background: var(--bg);">
-    <div id="loading" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; color: var(--fg-dim); font-size: 0.9rem;">
+  <style is:global>
+    /* biome-ignore lint/complexity/noImportantStyles: shiki dual-theme needs !important to override inline style attrs from codeToHtml output */
+    [data-theme="dark"] .shiki,
+    [data-theme="dark"] .shiki span {
+      color: var(--shiki-dark) !important;
+      background-color: var(--shiki-dark-bg) !important;
+      font-style: var(--shiki-dark-font-style) !important;
+      font-weight: var(--shiki-dark-font-weight) !important;
+      text-decoration: var(--shiki-dark-text-decoration) !important;
+    }
+    /* biome-ignore lint/complexity/noImportantStyles: shiki dual-theme needs !important to override inline style attrs from codeToHtml output */
+    .shiki {
+      background: transparent !important;
+      padding: 14px 18px;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+  </style>
+  <style is:global>
+    #vote-app {
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vote-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      height: 48px;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+      flex-shrink: 0;
+      gap: 0.5rem;
+    }
+
+    .vote-header-center {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-width: 0;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .challenge-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--fg);
+      max-width: 400px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prompt-trigger {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--fg-dim);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-family: inherit;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .prompt-trigger:hover,
+    .prompt-trigger.active {
+      color: var(--fg);
+      border-color: var(--fg);
+    }
+
+    .prompt-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .prompt-modal {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      max-width: 720px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .prompt-modal h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .prompt-modal-meta {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .prompt-modal pre {
+      margin: 0;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--fg);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .prompt-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--fg-dim);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .prompt-modal-close:hover {
+      color: var(--fg);
+      border-color: var(--fg);
+    }
+
+    .prompt-modal-wrapper {
+      position: relative;
+    }
+
+    .round-selector {
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-secondary);
+      padding: 0 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      height: 40px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .round-selector::-webkit-scrollbar {
+      display: none;
+    }
+
+    .round-pill {
+      flex-shrink: 0;
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: none;
+      color: var(--fg-dim);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      scroll-snap-align: start;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+
+    .round-pill:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+
+    .round-pill.active {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+      font-weight: 700;
+    }
+
+    .round-pill.complete {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    .round-pill.complete.active {
+      background: #22c55e;
+      color: #0b0d10;
+      border-color: #22c55e;
+    }
+
+    .round-pill .progress-count {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      font-weight: 600;
+    }
+
+    .round-pill.complete .progress-count,
+    .round-pill.active .progress-count {
+      opacity: 0.85;
+    }
+
+    .panes-grid {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      --split: 50%;
+      user-select: none;
+      touch-action: none;
+    }
+
+    /* RIGHT pane is the base layer, full-width behind */
+    .pane {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /* LEFT pane is on top, clipped to the split fraction */
+    .pane-left {
+      clip-path: inset(0 calc(100% - var(--split)) 0 0);
+      z-index: 1;
+    }
+
+    .pane-right {
+      z-index: 0;
+    }
+
+    .pane iframe,
+    .pane .pane-code {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Drag handle — sits on the dividing line */
+    .pane-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--split);
+      width: 14px;
+      transform: translateX(-50%);
+      cursor: ew-resize;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+
+    .pane-handle::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--line);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .pane-handle-grip {
+      position: relative;
+      width: 36px;
+      height: 64px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .pane-handle:hover .pane-handle-grip,
+    .pane-handle.dragging .pane-handle-grip {
+      border-color: var(--fg);
+      transform: scale(1.05);
+    }
+
+    .pane-handle-grip svg {
+      color: var(--fg-dim);
+    }
+
+    /* Floating control clusters — sit on top of both panes, always clickable */
+    .pane-controls {
+      position: absolute;
+      top: 8px;
+      z-index: 30;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      border-radius: 8px;
+    }
+
+    .pane-controls.left {
+      left: 8px;
+    }
+
+    .pane-controls.right {
+      right: 8px;
+    }
+
+    .pane-controls .label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    .pane-controls .toggle {
+      background: none;
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .pane-controls .toggle:hover,
+    .pane-controls .toggle.active {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .pane-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    .pane-code {
+      height: 100%;
+      overflow: auto;
+      background: var(--bg-secondary);
+      padding: 1rem;
+    }
+
+    .pane-code pre {
+      margin: 0;
+      overflow-x: auto;
+    }
+
+    .vote-footer {
+      flex-shrink: 0;
+      border-top: 1px solid var(--line);
+      background: var(--bg);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .vote-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .vote-btn {
+      padding: 8px 18px;
+      background: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .vote-btn svg {
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      padding: 6px 14px;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--fg);
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .nav-btn svg {
+      flex-shrink: 0;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .reveal-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--line);
+      padding: 1.5rem;
+      z-index: 100;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .reveal-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .reveal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .reveal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .score-pill {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+    }
+
+    @media (max-width: 640px) {
+      .pane-handle-grip {
+        width: 28px;
+        height: 56px;
+      }
+
+      .challenge-title {
+        display: none;
+      }
+
+      .vote-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .vote-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+
+      .reveal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .vote-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .round-pill {
+        font-size: 0.72rem;
+        padding: 3px 10px;
+      }
+    }
+  </style>
+
+  <div id="vote-app">
+    <div
+      style="display: flex; align-items: center; justify-content: center; flex: 1; color: var(--fg-dim); font-size: 0.9rem;"
+    >
       Loading challenges...
     </div>
   </div>
 </Layout>
 
 <script>
+  import { codeToHtml } from "https://esm.sh/shiki@1.24.0";
+
+  type RoundMeta = {
+    slug: string;
+    name: string;
+    description: string | null;
+    status: string;
+    position: number;
+  };
+
   type Challenge = {
     id: string;
     title: string;
@@ -26,8 +559,20 @@ if (!userId) {
 
   type Judgement = {
     challengeId: string;
-    left: { primitive: string; constraints: number; idiomatic: number; visual: number; reasoning: string };
-    right: { primitive: string; constraints: number; idiomatic: number; visual: number; reasoning: string };
+    left: {
+      primitive: string;
+      constraints: number;
+      idiomatic: number;
+      visual: number;
+      reasoning: string;
+    };
+    right: {
+      primitive: string;
+      constraints: number;
+      idiomatic: number;
+      visual: number;
+      reasoning: string;
+    };
     winner: "left" | "right" | "tie";
     verdict: string;
   };
@@ -35,27 +580,70 @@ if (!userId) {
   type VariantSide = { left: string; right: string };
   type UserVote = { challengeId: string; choice: string };
   type AppData = {
+    round: RoundMeta;
+    rounds: RoundMeta[];
     challenges: Challenge[];
     judgements: Judgement[];
     variantSides: Record<string, VariantSide>;
     userVotes: UserVote[];
     htmlMap: Record<string, Record<string, string>>;
+    progressByRound: Record<string, number>;
   };
 
   let data: AppData | null = null;
   let currentIndex = 0;
-  let showCode: Record<string, "left" | "right" | null> = {};
+  let currentRoundSlug = new URLSearchParams(window.location.search).get("round") ?? "";
+  let showLeftCode: Record<string, boolean> = {};
+  let showRightCode: Record<string, boolean> = {};
   let showReveal: Record<string, boolean> = {};
+  let showPrompt = false;
   let userVotes: Record<string, string> = {};
   let freshlyVoted: Record<string, boolean> = {};
+  let splitPct = 50;
+  const highlightCache: Record<string, string> = {};
 
-  async function loadData() {
-    const res = await fetch("/api/data");
-    data = await res.json() as AppData;
+  async function highlight(src: string): Promise<string> {
+    if (highlightCache[src]) return highlightCache[src];
+    try {
+      const result = await codeToHtml(src, {
+        lang: "html",
+        themes: { light: "github-light", dark: "github-dark" },
+        defaultColor: false,
+      });
+      highlightCache[src] = result;
+      return result;
+    } catch (e) {
+      console.error("shiki highlight failed", e);
+      const escaped = src
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `<pre><code>${escaped}</code></pre>`;
+    }
+  }
+
+  async function loadData(roundSlug?: string) {
+    const qs = roundSlug ? `?round=${roundSlug}` : "";
+    const res = await fetch(`/api/data${qs}`);
+    data = (await res.json()) as AppData;
+    userVotes = {};
     for (const v of data.userVotes) {
       userVotes[v.challengeId] = v.choice;
     }
+    currentRoundSlug = data.round.slug;
     render();
+  }
+
+  async function switchRound(slug: string) {
+    currentIndex = 0;
+    showLeftCode = {};
+    showRightCode = {};
+    showReveal = {};
+    freshlyVoted = {};
+    const url = new URL(window.location.href);
+    url.searchParams.set("round", slug);
+    window.history.pushState({}, "", url.toString());
+    await loadData(slug);
   }
 
   async function submitVote(challengeId: string, choice: string) {
@@ -70,6 +658,10 @@ if (!userId) {
       if (wasNew) {
         freshlyVoted[challengeId] = true;
         showReveal[challengeId] = true;
+        if (data?.progressByRound) {
+          data.progressByRound[currentRoundSlug] =
+            (data.progressByRound[currentRoundSlug] ?? 0) + 1;
+        }
       }
       render();
     }
@@ -77,7 +669,8 @@ if (!userId) {
 
   function getHtml(challengeId: string, side: "left" | "right"): string {
     if (!data) return "";
-    const variantKey = data.variantSides[challengeId][side];
+    const variantKey = data.variantSides[challengeId]?.[side];
+    if (!variantKey) return "";
     return data.htmlMap[challengeId]?.[variantKey] ?? "";
   }
 
@@ -87,17 +680,26 @@ if (!userId) {
 
   function variantLabel(challengeId: string, side: "left" | "right"): string {
     if (!data) return "";
-    const key = data.variantSides[challengeId][side];
-    return key === "A-with-mcp" ? "Variant A" : "Variant B";
+    const key = data.variantSides[challengeId]?.[side];
+    return key === "A-with-mcp" ? "with css-bash MCP" : "no MCP";
+  }
+
+  function variantBadge(challengeId: string, side: "left" | "right"): string {
+    if (!data) return "";
+    const key = data.variantSides[challengeId]?.[side];
+    return key === "A-with-mcp" ? "A" : "B";
   }
 
   function variantColor(challengeId: string, side: "left" | "right"): string {
     if (!data) return "";
-    const key = data.variantSides[challengeId][side];
+    const key = data.variantSides[challengeId]?.[side];
     return key === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
   }
 
-  function agreementBadge(judgement: Judgement, userChoice: string): string {
+  function agreementBadge(
+    judgement: Judgement,
+    userChoice: string,
+  ): "agree" | "partial" | "disagree" {
     const judgeWon = judgement.winner;
     if (judgeWon === "tie" && userChoice === "tie") return "agree";
     if (judgeWon === userChoice) return "agree";
@@ -105,7 +707,16 @@ if (!userId) {
     return "disagree";
   }
 
-  function render() {
+  const iconCode2 = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22" stroke-width="1.5" stroke-dasharray="2 2"/></svg>`;
+  const iconEye = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const iconLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`;
+  const iconRight = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+  const iconEqual = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/></svg>`;
+  const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const iconX = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+  const iconInfo = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+
+  async function render() {
     if (!data) return;
     const app = document.getElementById("vote-app");
     if (!app) return;
@@ -114,138 +725,238 @@ if (!userId) {
     const voted = userVotes[challenge.id];
     const judg = getJudgement(challenge.id);
     const reveal = showReveal[challenge.id];
-    const leftCode = showCode[challenge.id] === "left";
-    const rightCode = showCode[challenge.id] === "right";
+    const leftCodeOn = showLeftCode[challenge.id] ?? false;
+    const rightCodeOn = showRightCode[challenge.id] ?? false;
     const leftHtml = getHtml(challenge.id, "left");
     const rightHtml = getHtml(challenge.id, "right");
 
     const badge = voted && judg ? agreementBadge(judg, voted) : null;
-    const badgeColor = badge === "agree" ? "#22c55e" : badge === "partial" ? "#eab308" : "#ef4444";
-    const badgeLabel = badge === "agree" ? "Agree with judge" : badge === "partial" ? "Partial match" : "Disagree with judge";
+    const badgeColor =
+      badge === "agree" ? "#22c55e" : badge === "partial" ? "#eab308" : "#ef4444";
+    const badgeIcon = badge === "agree" ? iconCheck : iconX;
+    const badgeLabel =
+      badge === "agree"
+        ? "Agree with judge"
+        : badge === "partial"
+          ? "Partial match"
+          : "Disagree";
 
-    app.innerHTML = `
-      <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
-        <!-- Header bar -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; height: 48px; border-bottom: 1px solid var(--line); background: var(--bg); flex-shrink: 0;">
-          <a href="/" style="font-weight: 700; font-size: 0.9rem; color: var(--fg); text-decoration: none;">css<span style="color: #f59e0b;">-bash</span></a>
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <span style="font-size: 0.8rem; color: var(--fg-dim);">${currentIndex + 1} / ${data.challenges.length}</span>
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--fg); max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${challenge.title}</span>
-            <a href="/results" style="font-size: 0.8rem; color: var(--fg-dim); text-decoration: none; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px;">Results</a>
-          </div>
-        </div>
+    const leftHighlighted = leftCodeOn ? await highlight(leftHtml) : "";
+    const rightHighlighted = rightCodeOn ? await highlight(rightHtml) : "";
 
-        <!-- Main split panes -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; position: relative;">
-          <!-- LEFT pane -->
-          <div style="position: relative; border-right: 1px solid var(--line); overflow: hidden;">
-            <div style="position: absolute; top: 8px; left: 8px; z-index: 10; display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 8px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 4px; letter-spacing: 0.05em;">LEFT</span>
-            </div>
-            <button id="left-toggle" title="Toggle code" style="position: absolute; top: 8px; right: 8px; z-index: 10; background: rgba(0,0,0,0.5); border: none; color: #fff; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">
-              ${leftCode ? "👁" : "</>"}
-            </button>
-            ${leftCode
-              ? `<div id="left-code" style="height: 100%; overflow: auto; background: var(--bg-secondary); padding: 1rem; font-family: monospace; font-size: 0.8rem; white-space: pre; color: var(--fg);"></div>`
-              : `<iframe id="left-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin" style="width: 100%; height: 100%; border: none; background: #fff;"></iframe>`
-            }
-          </div>
+    const roundPills = data.rounds
+      .map((r) => {
+        const progress = data!.progressByRound?.[r.slug] ?? 0;
+        const isComplete = progress >= 10;
+        const isActive = r.slug === currentRoundSlug;
+        const classes = [
+          "round-pill",
+          isActive ? "active" : "",
+          isComplete ? "complete" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const check = isComplete
+          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+          : "";
+        const counter =
+          progress > 0
+            ? `<span class="progress-count">${isComplete ? "10/10" : `${progress}/10`}</span>`
+            : "";
+        return `<button class="${classes}" data-round="${r.slug}">${check}<span>${r.name}</span>${counter}</button>`;
+      })
+      .join("");
 
-          <!-- RIGHT pane -->
-          <div style="position: relative; overflow: hidden;">
-            <div style="position: absolute; top: 8px; left: 8px; z-index: 10; display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 8px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 4px; letter-spacing: 0.05em;">RIGHT</span>
-            </div>
-            <button id="right-toggle" title="Toggle code" style="position: absolute; top: 8px; right: 8px; z-index: 10; background: rgba(0,0,0,0.5); border: none; color: #fff; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">
-              ${rightCode ? "👁" : "</>"}
-            </button>
-            ${rightCode
-              ? `<div id="right-code" style="height: 100%; overflow: auto; background: var(--bg-secondary); padding: 1rem; font-family: monospace; font-size: 0.8rem; white-space: pre; color: var(--fg);"></div>`
-              : `<iframe id="right-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin" style="width: 100%; height: 100%; border: none; background: #fff;"></iframe>`
-            }
-          </div>
-        </div>
-
-        <!-- Bottom action row -->
-        <div style="flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-          <button id="btn-prev" style="padding: 6px 14px; background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--fg); cursor: pointer; font-size: 0.85rem;" ${currentIndex === 0 ? "disabled" : ""}>← back</button>
-
-          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-            ${!voted ? `
-              <button id="btn-left" style="padding: 8px 20px; background: none; border: 2px solid #f59e0b; border-radius: 8px; color: #f59e0b; font-weight: 700; cursor: pointer; font-size: 0.9rem;">LEFT wins</button>
-              <button id="btn-tie" style="padding: 8px 20px; background: none; border: 2px solid var(--fg-dim); border-radius: 8px; color: var(--fg-dim); font-weight: 700; cursor: pointer; font-size: 0.9rem;">= tie</button>
-              <button id="btn-right" style="padding: 8px 20px; background: none; border: 2px solid #0ea5e9; border-radius: 8px; color: #0ea5e9; font-weight: 700; cursor: pointer; font-size: 0.9rem;">RIGHT wins</button>
-            ` : `
-              <span style="font-size: 0.85rem; color: var(--fg-dim);">voted: <strong style="color: var(--fg);">${voted.toUpperCase()}</strong></span>
-              ${badge ? `<span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; border: 1px solid ${badgeColor}; color: ${badgeColor};">${badgeLabel}</span>` : ""}
-              <button id="btn-reveal" style="padding: 6px 14px; background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--fg); cursor: pointer; font-size: 0.85rem;">${reveal ? "hide judge" : "see judge"}</button>
-            `}
-          </div>
-
-          <button id="btn-next" style="padding: 6px 14px; background: ${currentIndex < data.challenges.length - 1 ? "var(--fg)" : "none"}; border: 1px solid var(--line); border-radius: 6px; color: ${currentIndex < data.challenges.length - 1 ? "var(--bg)" : "var(--fg-dim)"}; cursor: pointer; font-size: 0.85rem;" ${currentIndex >= data.challenges.length - 1 && !voted ? "disabled" : ""}>${currentIndex < data.challenges.length - 1 ? "next →" : "results →"}</button>
-        </div>
-
-        <!-- Reveal panel -->
-        ${reveal && judg ? `
-        <div id="reveal-panel" style="position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-secondary); border-top: 1px solid var(--line); padding: 1.5rem; z-index: 100; transform: translateY(0); transition: transform 0.3s ease; max-height: 60vh; overflow-y: auto;">
-          <div style="max-width: 900px; margin: 0 auto;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-              <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Judge verdict</h3>
-              <div style="display: flex; gap: 1rem; align-items: center;">
-                <span style="font-size: 0.8rem; color: var(--fg-dim);">
-                  LEFT was <strong style="color: ${variantColor(challenge.id, "left")};">${variantLabel(challenge.id, "left")}</strong> · RIGHT was <strong style="color: ${variantColor(challenge.id, "right")};">${variantLabel(challenge.id, "right")}</strong>
+    const revealPanel =
+      reveal && judg
+        ? `<div class="reveal-panel">
+        <div class="reveal-inner">
+          <div class="reveal-header">
+            <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Judge verdict</h3>
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 0.8rem; color: var(--fg-dim); display: inline-flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                  LEFT
+                  <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: ${variantColor(challenge.id, "left")}20; color: ${variantColor(challenge.id, "left")}; border: 1px solid ${variantColor(challenge.id, "left")}40; font-weight: 600; font-size: 0.7rem;">
+                    <span style="font-weight: 800;">${variantBadge(challenge.id, "left")}</span>
+                    ${variantLabel(challenge.id, "left")}
+                  </span>
                 </span>
-                <span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; background: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}20; color: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}; border: 1px solid ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}40;">
-                  ${judg.winner === "tie" ? "Tie" : judg.winner === "left" ? "LEFT wins" : "RIGHT wins"}
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                  RIGHT
+                  <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: ${variantColor(challenge.id, "right")}20; color: ${variantColor(challenge.id, "right")}; border: 1px solid ${variantColor(challenge.id, "right")}40; font-weight: 600; font-size: 0.7rem;">
+                    <span style="font-weight: 800;">${variantBadge(challenge.id, "right")}</span>
+                    ${variantLabel(challenge.id, "right")}
+                  </span>
                 </span>
-              </div>
+              </span>
+              <span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; background: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}20; color: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}; border: 1px solid ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}40;">
+                ${judg.winner === "tie" ? "Tie" : judg.winner === "left" ? "LEFT wins" : "RIGHT wins"}
+              </span>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-              ${(["left", "right"] as const).map(side => {
+          </div>
+          <div class="reveal-grid">
+            ${(["left", "right"] as const)
+              .map((side) => {
                 const s = judg[side];
                 return `
-                <div style="padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
-                  <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: ${variantColor(challenge.id, side)}; margin-bottom: 8px;">${side.toUpperCase()} · ${variantLabel(challenge.id, side)}</div>
-                  <div style="display: flex; gap: 0.5rem; margin-bottom: 8px; flex-wrap: wrap;">
-                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">constraints: ${s.constraints}/3</span>
-                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">idiomatic: ${s.idiomatic}/5</span>
-                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">visual: ${s.visual}/5</span>
-                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">primitive: ${s.primitive}</span>
-                  </div>
-                  <p style="margin: 0; font-size: 0.8rem; color: var(--fg-dim); line-height: 1.5;">${s.reasoning}</p>
-                </div>`;
-              }).join("")}
-            </div>
-            <div style="padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
-              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); margin-bottom: 6px;">Verdict</div>
-              <p style="margin: 0; font-size: 0.875rem; color: var(--fg); line-height: 1.6;">${judg.verdict}</p>
-            </div>
+              <div style="padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                  <span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim);">${side.toUpperCase()}</span>
+                  <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: ${variantColor(challenge.id, side)}20; color: ${variantColor(challenge.id, side)}; border: 1px solid ${variantColor(challenge.id, side)}40; font-size: 0.7rem; font-weight: 600;">
+                    <span style="font-weight: 800;">${variantBadge(challenge.id, side)}</span>
+                    ${variantLabel(challenge.id, side)}
+                  </span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 8px; flex-wrap: wrap;">
+                  <span class="score-pill">constraints: ${s.constraints}/3</span>
+                  <span class="score-pill">idiomatic: ${s.idiomatic}/5</span>
+                  <span class="score-pill">visual: ${s.visual}/5</span>
+                  <span class="score-pill">primitive: ${s.primitive}</span>
+                </div>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--fg-dim); line-height: 1.5;">${s.reasoning}</p>
+              </div>`;
+              })
+              .join("")}
+          </div>
+          <div style="padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); margin-bottom: 6px;">Verdict</div>
+            <p style="margin: 0; font-size: 0.875rem; color: var(--fg); line-height: 1.6;">${judg.verdict}</p>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); flex-wrap: wrap;">
+            <button id="reveal-btn-prev" class="nav-btn" ${currentIndex === 0 ? "disabled" : ""}>${iconLeft} back</button>
+            <button id="reveal-btn-close" class="nav-btn">hide judge</button>
+            <button id="reveal-btn-next" class="nav-btn">
+              ${currentIndex < data.challenges.length - 1 ? `next ${iconRight}` : `results ${iconRight}`}
+            </button>
           </div>
         </div>
-        ` : ""}
+      </div>`
+        : "";
+
+    app.innerHTML = `
+      <div class="vote-header">
+        <a href="/" style="font-weight: 700; font-size: 0.9rem; color: var(--fg); text-decoration: none; flex-shrink: 0;">css<span style="color: #f59e0b;">-bash</span></a>
+        <div class="vote-header-center">
+          <span style="font-size: 0.8rem; color: var(--fg-dim);">${currentIndex + 1} / ${data.challenges.length}</span>
+          <span class="challenge-title">${challenge.title}</span>
+          <button id="btn-prompt" class="prompt-trigger${showPrompt ? " active" : ""}" type="button" title="View challenge prompt">
+            ${iconInfo}
+            <span>prompt</span>
+          </button>
+          <a href="/results?round=${currentRoundSlug}" style="font-size: 0.8rem; color: var(--fg-dim); text-decoration: none; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; flex-shrink: 0;">Results</a>
+        </div>
       </div>
+
+      ${
+        showPrompt
+          ? `<div class="prompt-overlay" id="prompt-overlay">
+        <div class="prompt-modal-wrapper">
+          <div class="prompt-modal">
+            <h3>${challenge.title}</h3>
+            <div class="prompt-modal-meta">
+              <span style="padding: 2px 8px; background: var(--bg-secondary); border-radius: 4px;">${currentIndex + 1} / ${data.challenges.length}</span>
+              <span>Expected: <strong style="color: var(--fg);">${challenge.expectedFeature}</strong></span>
+            </div>
+            <pre>${challenge.prompt.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+            <button id="btn-prompt-close" class="prompt-modal-close" type="button" title="Close">${iconX}</button>
+          </div>
+        </div>
+      </div>`
+          : ""
+      }
+
+      <div class="round-selector" id="round-selector">
+        ${roundPills}
+      </div>
+
+      <div class="panes-grid" id="panes-grid" style="flex: 1; min-height: 0;">
+        <div class="pane pane-right">
+          ${
+            rightCodeOn
+              ? `<div class="pane-code">${rightHighlighted || `<pre><code>${rightHtml.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`}</div>`
+              : `<iframe id="right-iframe" class="pane-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin"></iframe>`
+          }
+        </div>
+
+        <div class="pane pane-left">
+          ${
+            leftCodeOn
+              ? `<div class="pane-code">${leftHighlighted || `<pre><code>${leftHtml.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`}</div>`
+              : `<iframe id="left-iframe" class="pane-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin"></iframe>`
+          }
+        </div>
+
+        <div class="pane-controls left">
+          <span class="label">LEFT</span>
+          <button id="left-toggle" class="toggle${leftCodeOn ? " active" : ""}" title="${leftCodeOn ? "View preview" : "View code"}">
+            ${leftCodeOn ? iconEye : iconCode2}
+          </button>
+        </div>
+
+        <div class="pane-controls right">
+          <span class="label">RIGHT</span>
+          <button id="right-toggle" class="toggle${rightCodeOn ? " active" : ""}" title="${rightCodeOn ? "View preview" : "View code"}">
+            ${rightCodeOn ? iconEye : iconCode2}
+          </button>
+        </div>
+
+        <div class="pane-handle" id="pane-handle" role="separator" aria-label="Drag to compare" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+          <div class="pane-handle-grip">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><polyline points="9 6 9 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: -6px;"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="vote-footer">
+        <button id="btn-prev" class="nav-btn" ${currentIndex === 0 ? "disabled" : ""}>${iconLeft} back</button>
+
+        <div class="vote-actions">
+          ${
+            !voted
+              ? `<button id="btn-left" class="vote-btn" style="border: 2px solid #f59e0b; color: #f59e0b;">${iconLeft} LEFT wins</button>
+                 <button id="btn-tie" class="vote-btn" style="border: 2px solid var(--fg-dim); color: var(--fg-dim);">${iconEqual} tie</button>
+                 <button id="btn-right" class="vote-btn" style="border: 2px solid #0ea5e9; color: #0ea5e9;">RIGHT wins ${iconRight}</button>`
+              : `<span style="font-size: 0.85rem; color: var(--fg-dim);">voted: <strong style="color: var(--fg);">${voted.toUpperCase()}</strong></span>
+                 ${badge ? `<span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; border: 1px solid ${badgeColor}; color: ${badgeColor}; display: inline-flex; align-items: center; gap: 4px;">${badgeIcon} ${badgeLabel}</span>` : ""}
+                 <button id="btn-reveal" class="nav-btn">${reveal ? "hide judge" : "see judge"}</button>`
+          }
+        </div>
+
+        <button id="btn-next" class="nav-btn" style="${currentIndex < data.challenges.length - 1 ? "background: var(--fg); color: var(--bg); border-color: var(--fg);" : ""}" ${currentIndex >= data.challenges.length - 1 && !voted ? "disabled" : ""}>
+          ${currentIndex < data.challenges.length - 1 ? `next ${iconRight}` : `results ${iconRight}`}
+        </button>
+      </div>
+
+      ${revealPanel}
     `;
 
-    const leftIframe = document.getElementById("left-iframe") as HTMLIFrameElement | null;
-    const rightIframe = document.getElementById("right-iframe") as HTMLIFrameElement | null;
-    const leftCodeEl = document.getElementById("left-code") as HTMLElement | null;
-    const rightCodeEl = document.getElementById("right-code") as HTMLElement | null;
+    const leftIframe = document.getElementById(
+      "left-iframe",
+    ) as HTMLIFrameElement | null;
+    const rightIframe = document.getElementById(
+      "right-iframe",
+    ) as HTMLIFrameElement | null;
 
     if (leftIframe) leftIframe.srcdoc = leftHtml;
     if (rightIframe) rightIframe.srcdoc = rightHtml;
-    if (leftCodeEl) leftCodeEl.textContent = leftHtml;
-    if (rightCodeEl) rightCodeEl.textContent = rightHtml;
 
     document.getElementById("btn-prev")?.addEventListener("click", () => {
-      if (currentIndex > 0) { currentIndex--; render(); }
+      if (currentIndex > 0) {
+        currentIndex--;
+        showPrompt = false;
+        render();
+      }
     });
 
     document.getElementById("btn-next")?.addEventListener("click", () => {
       if (currentIndex < data!.challenges.length - 1) {
         currentIndex++;
+        showPrompt = false;
         render();
       } else {
-        window.location.href = "/results";
+        window.location.href = `/results?round=${currentRoundSlug}`;
       }
     });
 
@@ -264,37 +975,187 @@ if (!userId) {
       render();
     });
 
+    document.getElementById("btn-prompt")?.addEventListener("click", () => {
+      showPrompt = !showPrompt;
+      render();
+    });
+    document.getElementById("btn-prompt-close")?.addEventListener("click", () => {
+      showPrompt = false;
+      render();
+    });
+    // Click outside the modal closes it
+    document.getElementById("prompt-overlay")?.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).id === "prompt-overlay") {
+        showPrompt = false;
+        render();
+      }
+    });
+
+    // Reveal-panel nav (mirror of footer nav so user is never stuck)
+    document.getElementById("reveal-btn-prev")?.addEventListener("click", () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showPrompt = false;
+        render();
+      }
+    });
+    document.getElementById("reveal-btn-close")?.addEventListener("click", () => {
+      showReveal[challenge.id] = false;
+      render();
+    });
+    document.getElementById("reveal-btn-next")?.addEventListener("click", () => {
+      if (currentIndex < data!.challenges.length - 1) {
+        currentIndex++;
+        showPrompt = false;
+        render();
+      } else {
+        window.location.href = `/results?round=${currentRoundSlug}`;
+      }
+    });
+
     document.getElementById("left-toggle")?.addEventListener("click", () => {
-      showCode[challenge.id] = showCode[challenge.id] === "left" ? null : "left";
+      showLeftCode[challenge.id] = !showLeftCode[challenge.id];
       render();
     });
     document.getElementById("right-toggle")?.addEventListener("click", () => {
-      showCode[challenge.id] = showCode[challenge.id] === "right" ? null : "right";
+      showRightCode[challenge.id] = !showRightCode[challenge.id];
       render();
     });
+
+    for (const btn of document.querySelectorAll<HTMLButtonElement>(".round-pill")) {
+      btn.addEventListener("click", () => {
+        const slug = btn.dataset.round;
+        if (slug && slug !== currentRoundSlug) {
+          switchRound(slug);
+        }
+      });
+    }
+
+    attachDragHandle();
+  }
+
+  function attachDragHandle() {
+    const grid = document.getElementById("panes-grid");
+    const handle = document.getElementById("pane-handle");
+    if (!grid || !handle) return;
+
+    // Restore split from module-level state so it survives re-renders
+    grid.style.setProperty("--split", `${splitPct}%`);
+    handle.setAttribute("aria-valuenow", String(Math.round(splitPct)));
+
+    const setSplit = (pct: number) => {
+      const clamped = Math.max(0, Math.min(100, pct));
+      splitPct = clamped;
+      grid.style.setProperty("--split", `${clamped}%`);
+      handle.setAttribute("aria-valuenow", String(Math.round(clamped)));
+    };
+
+    let dragging = false;
+
+    const onPointerDown = (e: PointerEvent) => {
+      dragging = true;
+      handle.classList.add("dragging");
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging) return;
+      const rect = grid.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setSplit(pct);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove("dragging");
+      handle.releasePointerCapture(e.pointerId);
+
+      // Soft snap to 0/50/100 if released within 6% of those anchors
+      const anchors = [0, 50, 100];
+      const snap = anchors.find((a) => Math.abs(splitPct - a) < 6);
+      if (snap !== undefined) setSplit(snap);
+    };
+
+    handle.addEventListener("pointerdown", onPointerDown);
+    handle.addEventListener("pointermove", onPointerMove);
+    handle.addEventListener("pointerup", onPointerUp);
+    handle.addEventListener("pointercancel", onPointerUp);
+
+    // Keyboard support
+    handle.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 10 : 2;
+      if (e.key === "ArrowLeft") {
+        setSplit(splitPct - step);
+        e.preventDefault();
+      } else if (e.key === "ArrowRight") {
+        setSplit(splitPct + step);
+        e.preventDefault();
+      } else if (e.key === "Home") {
+        setSplit(0);
+      } else if (e.key === "End") {
+        setSplit(100);
+      } else if (e.key === " ") {
+        setSplit(50);
+        e.preventDefault();
+      }
+    });
+
+    // Double-click resets to 50%
+    handle.addEventListener("dblclick", () => setSplit(50));
   }
 
   function handleKey(e: KeyboardEvent) {
     if (!data) return;
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+
     const challenge = data.challenges[currentIndex];
+    if (e.key === "Escape") {
+      if (showPrompt) {
+        showPrompt = false;
+        render();
+        return;
+      }
+    }
     if (e.key === "ArrowLeft") {
-      if (currentIndex > 0) { currentIndex--; render(); }
+      if (currentIndex > 0) {
+        currentIndex--;
+        showPrompt = false;
+        render();
+      }
     } else if (e.key === "ArrowRight") {
-      if (currentIndex < data.challenges.length - 1) { currentIndex++; render(); }
+      if (currentIndex < data.challenges.length - 1) {
+        currentIndex++;
+        showPrompt = false;
+        render();
+      }
+    } else if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
+      showPrompt = !showPrompt;
+      render();
     } else if (e.key === "1") {
       submitVote(challenge.id, "left");
     } else if (e.key === "2") {
       submitVote(challenge.id, "tie");
     } else if (e.key === "3") {
       submitVote(challenge.id, "right");
-    } else if (e.key === "c") {
-      showCode[challenge.id] = showCode[challenge.id] ? null : "left";
+    } else if (e.key === "[") {
+      showLeftCode[challenge.id] = !showLeftCode[challenge.id];
+      render();
+    } else if (e.key === "]") {
+      showRightCode[challenge.id] = !showRightCode[challenge.id];
       render();
     } else if (e.key === "s") {
-      window.location.href = "/results";
+      window.location.href = `/results?round=${currentRoundSlug}`;
     }
   }
 
+  window.addEventListener("popstate", () => {
+    const slug = new URLSearchParams(window.location.search).get("round") ?? "";
+    loadData(slug || undefined);
+  });
+
   document.addEventListener("keydown", handleKey);
-  loadData();
+  loadData(currentRoundSlug || undefined);
 </script>
