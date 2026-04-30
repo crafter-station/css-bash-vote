@@ -1023,6 +1023,10 @@ if (!userId) {
     // Reveal-panel nav (mirror of footer nav so user is never stuck)
     document.getElementById("reveal-btn-prev")?.addEventListener("click", () => {
       if (currentIndex > 0) {
+        const prevChallenge = data!.challenges[currentIndex - 1];
+        if (userVotes[prevChallenge.id] && getJudgement(prevChallenge.id)) {
+          showReveal[prevChallenge.id] = true;
+        }
         currentIndex--;
         showPrompt = false;
         render();
@@ -1034,6 +1038,10 @@ if (!userId) {
     });
     document.getElementById("reveal-btn-next")?.addEventListener("click", () => {
       if (currentIndex < data!.challenges.length - 1) {
+        const nextChallenge = data!.challenges[currentIndex + 1];
+        if (userVotes[nextChallenge.id] && getJudgement(nextChallenge.id)) {
+          showReveal[nextChallenge.id] = true;
+        }
         currentIndex++;
         showPrompt = false;
         render();
