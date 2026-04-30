@@ -63,42 +63,32 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       font-weight: 600;
     }
 
-    .locked-overlay {
-      position: relative;
-      pointer-events: none;
-      filter: blur(6px) saturate(0.6);
-      opacity: 0.55;
-      user-select: none;
-    }
-    .locked-wrapper {
-      position: relative;
-    }
     .locked-cta {
-      position: absolute;
-      inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 0.75rem;
-      padding: 2rem;
+      padding: 2rem 1.5rem;
       text-align: center;
-      background: rgba(11, 13, 16, 0.55);
-      backdrop-filter: blur(2px);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(14, 165, 233, 0.05));
+      border: 1px solid rgba(245, 158, 11, 0.25);
       border-radius: 12px;
-      z-index: 10;
+      margin-bottom: 1.5rem;
     }
     .locked-cta-title {
-      font-size: 1.1rem;
-      font-weight: 700;
+      font-size: 1.15rem;
+      font-weight: 800;
       color: var(--fg);
       margin: 0;
+      letter-spacing: -0.01em;
     }
     .locked-cta-sub {
       font-size: 0.875rem;
       color: var(--fg-dim);
-      max-width: 360px;
+      max-width: 420px;
       margin: 0;
+      line-height: 1.55;
     }
     .locked-cta-btn {
       display: inline-flex;
@@ -114,8 +104,15 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       cursor: pointer;
       text-decoration: none;
       font-family: inherit;
+      margin-top: 0.5rem;
     }
     .locked-cta-btn:hover { opacity: 0.9; }
+    .locked-mock {
+      pointer-events: none;
+      user-select: none;
+      filter: blur(5px) saturate(0.5);
+      opacity: 0.45;
+    }
 
     @media (max-width: 640px) {
       .scoreboard-grid {
@@ -145,16 +142,15 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       style="display: none; padding: 12px 16px; margin-bottom: 1rem; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.08); align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;"
     ></div>
 
-    <div style="position: relative;">
-      <div id="locked-cta" class="locked-cta" style="display: none;"></div>
-      <div id="locked-wrapper">
-        <div id="scoreboard" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-secondary);">
-          <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 1rem;">Community scoreboard</div>
-          <div id="scoreboard-content" style="color: var(--fg-dim); font-size: 0.9rem;">Loading...</div>
-        </div>
+    <div id="locked-cta" class="locked-cta" style="display: none;"></div>
 
-        <div id="challenges-list"></div>
+    <div id="locked-wrapper">
+      <div id="scoreboard" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-secondary);">
+        <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 1rem;">Community scoreboard</div>
+        <div id="scoreboard-content" style="color: var(--fg-dim); font-size: 0.9rem;">Loading...</div>
       </div>
+
+      <div id="challenges-list"></div>
     </div>
 
     {userId && (
@@ -225,20 +221,17 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       }
     }
 
-    // Lock state: if locked, dim the body content and show a CTA overlay.
+    // Lock state: if locked, show a prominent CTA above and replace body with a 3-row mock.
     // If partial, show a softer CTA banner above (still readable content).
     const lockedWrapperEl = document.getElementById("locked-wrapper");
     const lockedCtaEl = document.getElementById("locked-cta");
     const partialBannerEl = document.getElementById("partial-banner");
-    if (lockedWrapperEl) {
-      lockedWrapperEl.classList.toggle("locked-overlay", isLocked);
-    }
     if (lockedCtaEl) {
       if (isLocked && round) {
         lockedCtaEl.style.display = "flex";
         lockedCtaEl.innerHTML = `
           <h3 class="locked-cta-title">Vote in this round to unlock results</h3>
-          <p class="locked-cta-sub">Numbers below are placeholders. Cast your 10 votes to see how the community ranks <strong style="color: var(--fg);">${round.name}</strong>.</p>
+          <p class="locked-cta-sub">Cast your 10 votes to see how the community ranks <strong style="color: var(--fg);">${round.name}</strong>.</p>
           <a href="/vote?round=${round.slug}" class="locked-cta-btn">Vote ${round.name}</a>
         `;
       } else {
@@ -262,6 +255,61 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     const roundLabelEl = document.getElementById("round-label");
     if (roundLabelEl) {
       roundLabelEl.textContent = round?.name ?? "";
+    }
+
+    if (lockedWrapperEl) {
+      lockedWrapperEl.classList.toggle("locked-mock", isLocked);
+    }
+
+    if (isLocked) {
+      const sbEl = document.getElementById("scoreboard-content");
+      if (sbEl) {
+        sbEl.innerHTML = `
+          <div class="scoreboard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: center;">
+            <div><div style="font-size: 2rem; font-weight: 800; color: #f59e0b;">7</div><div style="font-size: 0.8rem; color: var(--fg-dim);">css-bash wins</div></div>
+            <div><div style="font-size: 2rem; font-weight: 800; color: #0ea5e9;">2</div><div style="font-size: 0.8rem; color: var(--fg-dim);">vanilla wins</div></div>
+            <div><div style="font-size: 2rem; font-weight: 800; color: #eab308;">1</div><div style="font-size: 0.8rem; color: var(--fg-dim);">Ties</div></div>
+            <div><div style="font-size: 2rem; font-weight: 800; color: var(--fg);">128</div><div style="font-size: 0.8rem; color: var(--fg-dim);">Total votes</div></div>
+          </div>
+        `;
+      }
+      const listEl = document.getElementById("challenges-list");
+      if (listEl) {
+        const fakeRows = [
+          { id: "fake-01", title: "Smooth scrolling parallax with depth layers", feat: "scroll-driven-animations", lpct: 68, rpct: 25, tpct: 7, total: 24 },
+          { id: "fake-02", title: "Container query masonry gallery with adaptive gaps", feat: "container-queries", lpct: 41, rpct: 52, tpct: 7, total: 18 },
+          { id: "fake-03", title: "Anchor-positioned tooltip with view-transition", feat: "anchor-positioning", lpct: 72, rpct: 22, tpct: 6, total: 31 },
+        ];
+        listEl.innerHTML = fakeRows
+          .map(
+            (r) => `
+          <div style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-secondary);">
+            <div class="challenge-row-header" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 4px;">${r.id}</div>
+                <div style="font-size: 1rem; font-weight: 700; color: var(--fg);">${r.title}</div>
+                <div style="font-size: 0.75rem; color: var(--fg-dim); margin-top: 4px;">Expected: <code style="font-family: monospace;">${r.feat}</code></div>
+              </div>
+              <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 999px; border: 1px solid #f59e0b40; color: #f59e0b; font-weight: 600;">Judge: A wins</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden;">
+                <div style="width: ${r.lpct}%; background: #f59e0b;"></div>
+                <div style="width: ${r.tpct}%; background: #eab308;"></div>
+                <div style="width: ${r.rpct}%; background: #0ea5e9;"></div>
+              </div>
+              <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--fg-dim); flex-wrap: wrap;">
+                <span>LEFT: <strong style="color: #f59e0b;">${r.lpct}%</strong></span>
+                <span>Tie: <strong style="color: #eab308;">${r.tpct}%</strong></span>
+                <span>RIGHT: <strong style="color: #0ea5e9;">${r.rpct}%</strong></span>
+                <span style="margin-left: auto;">${r.total} votes</span>
+              </div>
+            </div>
+          </div>`,
+          )
+          .join("");
+      }
+      return;
     }
 
     const scoreboardEl = document.getElementById("scoreboard-content");
