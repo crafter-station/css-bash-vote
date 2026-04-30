@@ -293,13 +293,11 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
         <div class="scoreboard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: center;">
           <div>
             <div style="font-size: 2rem; font-weight: 800; color: #f59e0b;">${aWins}</div>
-            <div style="font-size: 0.8rem; color: var(--fg-dim);">Variant A wins</div>
-            <div style="font-size: 0.7rem; color: var(--fg-dim); margin-top: 2px;">with MCP</div>
+            <div style="font-size: 0.8rem; color: var(--fg-dim);">css-bash wins</div>
           </div>
           <div>
             <div style="font-size: 2rem; font-weight: 800; color: #0ea5e9;">${bWins}</div>
-            <div style="font-size: 0.8rem; color: var(--fg-dim);">Variant B wins</div>
-            <div style="font-size: 0.7rem; color: var(--fg-dim); margin-top: 2px;">without MCP</div>
+            <div style="font-size: 0.8rem; color: var(--fg-dim);">vanilla wins</div>
           </div>
           <div>
             <div style="font-size: 2rem; font-weight: 800; color: #eab308;">${ties}</div>

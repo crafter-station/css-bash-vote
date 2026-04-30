@@ -681,7 +681,7 @@ if (!userId) {
   function variantLabel(challengeId: string, side: "left" | "right"): string {
     if (!data) return "";
     const key = data.variantSides[challengeId]?.[side];
-    return key === "A-with-mcp" ? "with css-bash MCP" : "no MCP";
+    return key === "A-with-mcp" ? "css-bash" : "vanilla";
   }
 
   function variantBadge(challengeId: string, side: "left" | "right"): string {

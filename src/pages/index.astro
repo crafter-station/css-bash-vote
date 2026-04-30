@@ -75,15 +75,21 @@ const isFullyDone = totalVoted >= 60;
           Crafter Station . Community Benchmark
         </div>
 
-        <div class="max-w-[680px]">
-          <h1 class="m-0 mb-3 text-[clamp(1.85rem,5.5vw,3.5rem)] font-extrabold leading-[1.1] tracking-[-0.04em]">
+        <div class="max-w-[760px]">
+          <h1 class="m-0 mb-3 whitespace-nowrap text-[clamp(1.5rem,5.2vw,3.5rem)] font-extrabold leading-[1.1] tracking-[-0.04em]">
             Which AI writes
             <span class="text-[var(--amber)]">better CSS</span>?
           </h1>
           <p class="m-0 text-sm sm:text-base text-[var(--fg-dim)] leading-[1.6]">
-            60 modern CSS challenges across 6 themed rounds. Two anonymous agents per challenge.
-            We ran <strong class="text-[var(--fg)]">Codex with the css-bash MCP</strong>
-            and without it. You decide which output is stronger.
+            60 modern CSS challenges across 6 themed rounds. Two anonymous Codex agents per challenge:
+            one with
+            <a
+              href="https://github.com/crafter-station/css-bash"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-bold text-[var(--fg)] no-underline hover:text-[var(--amber)] transition-colors"
+            >css-bash</a>
+            and one vanilla. You decide which output is stronger.
           </p>
         </div>
 
@@ -161,11 +167,11 @@ const isFullyDone = totalVoted >= 60;
         <div class="flex flex-wrap items-center justify-center gap-2 text-xs">
           <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3 py-1 text-[var(--fg-dim)]">
             <span class="h-1.5 w-1.5 rounded-full bg-[var(--amber)]"></span>
-            With css-bash MCP
+            css-bash
           </span>
           <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3 py-1 text-[var(--fg-dim)]">
             <span class="h-1.5 w-1.5 rounded-full bg-[var(--sky)]"></span>
-            Without MCP
+            vanilla
           </span>
           <span class="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-secondary)] px-3 py-1 text-[var(--fg-dim)]">
             Blind voting
@@ -173,5 +179,46 @@ const isFullyDone = totalVoted >= 60;
         </div>
       </section>
     </main>
+
+    <footer class="relative z-[1] border-t border-[var(--line)] bg-[var(--bg)]/60 backdrop-blur">
+      <div class="mx-auto flex max-w-[1280px] flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:justify-between sm:px-6">
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[var(--fg-dim)]">
+          <span class="text-[0.7rem] uppercase tracking-[0.08em] text-[var(--fg-dim)]">More from Crafter Station</span>
+          <a
+            href="https://tinte.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
+          >tinte</a>
+          <a
+            href="https://tryelements.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
+          >elements</a>
+          <a
+            href="https://hack0.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
+          >hack0</a>
+          <a
+            href="https://github.com/crafter-station"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
+          >github</a>
+        </div>
+        <div class="text-xs text-[var(--fg-dim)]">
+          Built by
+          <a
+            href="https://railly.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-semibold text-[var(--fg)] no-underline hover:text-[var(--amber)] transition-colors"
+          >Railly Hugo</a>
+        </div>
+      </div>
+    </footer>
   </div>
 </Layout>

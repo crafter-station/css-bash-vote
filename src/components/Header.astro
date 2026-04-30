@@ -1,6 +1,5 @@
 ---
 import { SignInButton, UserButton } from "@clerk/astro/components";
-import { LogIn } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface Props {
@@ -8,6 +7,29 @@ interface Props {
 }
 
 const { isSignedIn } = Astro.props;
+
+// Server-side fetch the GitHub star count so first paint already has it.
+// Cached at the module level for the lifetime of the lambda instance.
+let stars = 0;
+try {
+  const res = await fetch("https://api.github.com/repos/crafter-station/css-bash", {
+    headers: {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "css-bash-vote",
+    },
+  });
+  if (res.ok) {
+    const json = (await res.json()) as { stargazers_count?: number };
+    stars = json.stargazers_count ?? 0;
+  }
+} catch {
+  stars = 0;
+}
+
+function formatStars(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
 ---
 
 <header class="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur">
@@ -19,7 +41,26 @@ const { isSignedIn } = Astro.props;
       css<span class="text-[var(--amber)]">-bash</span>
     </a>
 
-    <nav class="flex flex-wrap items-center gap-3 sm:gap-4">
+    <nav class="flex flex-wrap items-center gap-2 sm:gap-3">
+      <a
+        href="https://github.com/crafter-station/css-bash"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-2.5 py-1.5 text-xs text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] hover:border-[var(--fg)] transition-colors"
+        aria-label={`Star css-bash on GitHub (${stars} stars)`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+        </svg>
+        <span class="hidden sm:inline">Star</span>
+        <span class="inline-flex items-center gap-1 text-[var(--fg)] font-semibold">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          {formatStars(stars)}
+        </span>
+      </a>
+
       <a
         href="/results"
         class="text-sm text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
@@ -37,7 +78,11 @@ const { isSignedIn } = Astro.props;
             type="button"
             class="inline-flex items-center gap-1.5 rounded-md bg-[var(--fg)] px-3.5 py-1.5 text-sm font-semibold text-[var(--bg)] hover:opacity-90 transition-opacity"
           >
-            <LogIn size={15} className="lucide" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
             Sign in
           </button>
         </SignInButton>
