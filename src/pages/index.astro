@@ -1,0 +1,97 @@
+---
+import { Show, SignInButton } from "@clerk/astro/components";
+
+import { Header } from "../components/Header";
+import Layout from "../layouts/Layout.astro";
+
+const { userId } = Astro.locals.auth();
+---
+
+<Layout title="css-bash">
+  <Header isSignedIn={!!userId} client:load />
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;">
+    <section
+      style="min-height: calc(100vh - 56px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2rem; padding: 4rem 0;"
+    >
+      <div
+        style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.75rem; color: var(--fg-dim); font-weight: 500;"
+      >
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block;"></span>
+        Crafter Station &middot; Community Benchmark
+      </div>
+
+      <div style="max-width: 680px;">
+        <h1
+          style="font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.04em; margin: 0 0 1.5rem;"
+        >
+          Which AI writes
+          <span style="color: var(--amber);">better CSS</span>?
+        </h1>
+        <p style="font-size: 1.125rem; color: var(--fg-dim); line-height: 1.7; margin: 0;">
+          10 modern CSS challenges. Two anonymous agents. One voted winner.
+          We ran <strong style="color: var(--fg);">Codex with the css-bash MCP</strong> and without it &mdash; now you decide which output is stronger.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+        <Show when="isSignedOut">
+          <SignInButton mode="redirect" redirectUrl="/vote">
+            <button
+              type="button"
+              style="padding: 12px 28px; background: var(--fg); color: var(--bg); border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -0.01em;"
+            >
+              Sign in to vote
+            </button>
+          </SignInButton>
+        </Show>
+        <Show when="isSignedIn">
+          <a
+            href="/vote"
+            style="padding: 12px 28px; background: var(--fg); color: var(--bg); border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -0.01em; text-decoration: none;"
+          >
+            Start voting &rarr;
+          </a>
+        </Show>
+        <a
+          href="/results"
+          style="padding: 12px 28px; background: none; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none;"
+        >
+          See results
+        </a>
+      </div>
+
+      <div
+        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; width: 100%; max-width: 560px; margin-top: 2rem;"
+      >
+        <div style="background: var(--bg-secondary); padding: 1.25rem; text-align: center;">
+          <div style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em;">10</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim); margin-top: 4px;">Challenges</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1.25rem; text-align: center;">
+          <div style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; color: var(--amber);">2</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim); margin-top: 4px;">Anonymous agents</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1.25rem; text-align: center;">
+          <div style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; color: var(--sky);">Blind</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim); margin-top: 4px;">Voting</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 560px;">
+        <div
+          style="padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; text-align: left; background: var(--bg-secondary);"
+        >
+          <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--amber); text-transform: uppercase; margin-bottom: 8px;">Variant A</div>
+          <div style="font-size: 0.875rem; color: var(--fg);">Codex with css-bash MCP &mdash; access to fresh CSS docs at inference time</div>
+        </div>
+        <div
+          style="padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; text-align: left; background: var(--bg-secondary);"
+        >
+          <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--sky); text-transform: uppercase; margin-bottom: 8px;">Variant B</div>
+          <div style="font-size: 0.875rem; color: var(--fg);">Codex without MCP &mdash; relies on training data alone, no live docs</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>

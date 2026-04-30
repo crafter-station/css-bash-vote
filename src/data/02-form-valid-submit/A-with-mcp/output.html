@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Valid Form Submit</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      background: #f4f7f6;
+      color: #17211d;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    main {
+      width: min(100% - 32px, 420px);
+      padding: 32px;
+      background: #ffffff;
+      border: 1px solid #d8e2dd;
+      border-radius: 8px;
+      box-shadow: 0 16px 40px rgba(23, 33, 29, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: 1.5rem;
+      line-height: 1.2;
+    }
+
+    form {
+      display: grid;
+      gap: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 2px solid #b8c5bf;
+      border-radius: 6px;
+      color: #17211d;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #198754;
+      box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.16);
+    }
+
+    input:invalid:not(:placeholder-shown) {
+      border-color: #b42318;
+    }
+
+    button {
+      min-height: 48px;
+      margin-top: 8px;
+      border: 0;
+      border-radius: 6px;
+      background: #9aa3a0;
+      color: #ffffff;
+      font: inherit;
+      font-weight: 800;
+      cursor: not-allowed;
+      transition: background-color 160ms ease, transform 160ms ease;
+    }
+
+    form:valid button {
+      background: #10b981;
+      cursor: pointer;
+    }
+
+    form:valid button:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Required Form</h1>
+    <form action="#" method="post">
+      <label>
+        Name
+        <input type="text" name="name" required placeholder="Your name">
+      </label>
+
+      <label>
+        Email
+        <input type="email" name="email" required placeholder="you@example.com">
+      </label>
+
+      <label>
+        Age
+        <input type="number" name="age" min="18" required placeholder="18">
+      </label>
+
+      <button type="submit">Submit</button>
+    </form>
+  </main>
+</body>
+</html>

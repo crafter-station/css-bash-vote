@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Scroll Progress</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      color: #171717;
+      background: #fbfaf7;
+      line-height: 1.7;
+    }
+
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      width: 100%;
+      height: 8px;
+      background: #116466;
+      transform: scaleX(0);
+      transform-origin: left center;
+      animation: fill-progress linear both;
+      animation-timeline: scroll(root block);
+    }
+
+    @keyframes fill-progress {
+      from {
+        transform: scaleX(0);
+      }
+
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    header {
+      min-height: 70vh;
+      display: grid;
+      place-items: center;
+      padding: 7rem 1.5rem 4rem;
+      border-bottom: 1px solid #ded8cb;
+      background: #f1eee6;
+    }
+
+    .intro {
+      width: min(880px, 100%);
+    }
+
+    h1 {
+      margin: 0 0 1rem;
+      max-width: 12ch;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(3.25rem, 10vw, 8rem);
+      line-height: 0.92;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 62ch;
+      margin: 0;
+      font-size: clamp(1.125rem, 2vw, 1.5rem);
+      color: #4d4a43;
+    }
+
+    main {
+      width: min(900px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    section {
+      min-height: 115vh;
+      padding: 7rem 0;
+      border-bottom: 1px solid #ded8cb;
+    }
+
+    section:last-child {
+      border-bottom: 0;
+    }
+
+    h2 {
+      margin: 0 0 2rem;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(2.25rem, 5vw, 4.5rem);
+      line-height: 1;
+      font-weight: 760;
+      letter-spacing: 0;
+      color: #2c3531;
+    }
+
+    p {
+      margin: 0 0 1.35rem;
+      font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header>
+    <div class="intro">
+      <h1>Scroll Progress</h1>
+      <p>A pure CSS progress indicator fills across the top edge as the document moves from its first pixel to its last.</p>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Section One</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer cursus, neque non interdum dignissim, tortor augue luctus ipsum, a placerat sapien nibh ac orci. Suspendisse potenti. Etiam euismod dictum risus, vitae dictum magna congue id.</p>
+      <p>Praesent venenatis risus id risus faucibus, vitae lacinia sem luctus. Donec at massa id justo malesuada mattis. Vivamus gravida, massa eget mattis commodo, lorem sem facilisis sem, vel pretium justo erat non nisl.</p>
+      <p>Morbi sodales sed augue non gravida. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Curabitur luctus velit sit amet mi cursus, in fermentum ipsum pretium. Sed posuere suscipit luctus.</p>
+      <p>Aliquam eget eros at leo porttitor fermentum. Nam ut dolor vitae lacus consequat consequat. Sed facilisis justo eu sem laoreet, eget posuere lacus eleifend. Donec in fermentum justo, sed feugiat libero.</p>
+      <p>Fusce lacinia enim in purus sollicitudin, vitae vulputate purus gravida. Maecenas rhoncus enim vel tellus efficitur, ac rutrum ipsum blandit. Quisque congue arcu sed tristique finibus.</p>
+      <p>Integer fringilla arcu sed ex imperdiet, sed dapibus ipsum volutpat. Donec vitae nunc lorem. Nunc luctus lectus vel velit facilisis, quis suscipit neque mollis. Mauris iaculis est vitae elit sagittis ultricies.</p>
+    </section>
+
+    <section>
+      <h2>Section Two</h2>
+      <p>Curabitur malesuada turpis a nisi sodales, nec interdum mi interdum. Integer non tortor nec dolor aliquet porta. Nunc vulputate tempor orci, at ullamcorper justo viverra sed. Cras pretium mi at arcu facilisis dictum.</p>
+      <p>Sed viverra dolor vitae pulvinar elementum. Duis porta, sem vel mattis laoreet, neque dolor sodales elit, in tempus justo neque ac dui. Nam accumsan purus id nisi suscipit, sed pretium quam cursus.</p>
+      <p>Phasellus tincidunt vestibulum odio, a ultricies lacus bibendum id. Pellentesque feugiat venenatis velit, a posuere lorem convallis nec. Nam sed nulla vitae risus commodo blandit. Nulla suscipit porttitor neque.</p>
+      <p>In posuere quam vel gravida hendrerit. Etiam eu ipsum urna. Morbi fermentum feugiat mi, sit amet porttitor lacus egestas sit amet. Pellentesque cursus urna id neque commodo, non rhoncus eros lacinia.</p>
+      <p>Donec a risus vel nunc luctus tincidunt. Sed sed justo eget leo viverra sagittis. Cras posuere, justo sed tempus ultricies, magna odio sagittis sapien, id dignissim nulla nulla a magna.</p>
+      <p>Vivamus et odio ac felis volutpat viverra. Aliquam erat volutpat. Vestibulum euismod ipsum sed dui molestie, quis tincidunt libero gravida. Praesent faucibus nunc vitae ante viverra, sit amet finibus tortor faucibus.</p>
+    </section>
+
+    <section>
+      <h2>Section Three</h2>
+      <p>Nam hendrerit leo eget neque tincidunt, quis fringilla erat eleifend. Ut ut convallis erat. Mauris faucibus enim eget tortor pharetra, a vestibulum quam pulvinar. Integer vitae metus at ante dignissim vestibulum.</p>
+      <p>Vestibulum dignissim augue vel neque rutrum, vel cursus ex suscipit. Maecenas sed diam laoreet, convallis lacus in, tincidunt nisi. Pellentesque id dictum orci. Sed eget mattis urna, id luctus mauris.</p>
+      <p>Ut rhoncus lorem quis sapien interdum, vel commodo magna congue. Suspendisse at pretium odio. Sed placerat, lorem eget ullamcorper tincidunt, risus lacus aliquet ligula, vitae egestas risus ligula sed arcu.</p>
+      <p>Quisque elementum ex sed mauris varius, eget rhoncus mauris vestibulum. Mauris eget arcu nulla. Sed sed ante ipsum. Etiam vestibulum mauris sed ipsum condimentum, eget aliquet nunc sagittis.</p>
+      <p>Nullam et magna ut felis dignissim viverra. Curabitur eget porttitor magna. Duis at orci cursus, rhoncus purus non, gravida magna. Sed consequat massa non justo tincidunt, id aliquam leo viverra.</p>
+      <p>Integer sed ullamcorper arcu. Proin blandit lectus at lacus finibus, non semper nisl accumsan. Vestibulum dignissim neque quis sem suscipit, vitae scelerisque mi ultricies. Aenean et faucibus nisi.</p>
+    </section>
+
+    <section>
+      <h2>Section Four</h2>
+      <p>Suspendisse a turpis vitae eros pulvinar commodo. Donec vestibulum mi sed arcu interdum, eget consectetur massa malesuada. In quis gravida sapien. Curabitur mattis purus non nibh luctus, in aliquam risus egestas.</p>
+      <p>Aliquam vehicula dignissim libero, nec pharetra orci euismod ac. Duis molestie ipsum et metus ultricies, vitae tempor erat maximus. Nullam pretium eros eget magna consequat, sit amet posuere erat laoreet.</p>
+      <p>Praesent tristique ante in risus pretium, non luctus dolor elementum. Sed volutpat feugiat magna, id luctus erat pretium sed. Proin posuere justo vitae enim rhoncus, id cursus nisi tempus.</p>
+      <p>Mauris in sem sed dolor rutrum venenatis. Donec quis orci augue. Donec sit amet tortor non velit hendrerit bibendum. Vivamus non lorem non ligula vestibulum suscipit ut nec metus.</p>
+      <p>Etiam fermentum augue ut dui accumsan, vel vulputate odio mattis. Nulla tempus augue sed ipsum egestas, at semper massa pulvinar. Donec tempor ex a ipsum rhoncus, nec porttitor mi accumsan.</p>
+      <p>Phasellus tempor nisl at nibh eleifend, vel facilisis nulla posuere. Cras eget tellus in turpis condimentum iaculis. Vivamus ultricies lorem non viverra aliquet. Nulla ultrices massa nec lacus gravida tincidunt.</p>
+    </section>
+
+    <section>
+      <h2>Section Five</h2>
+      <p>Fusce vulputate metus non ex ullamcorper, sed vulputate tortor sodales. Integer eget elit vitae neque efficitur ullamcorper. Suspendisse venenatis, nibh sed elementum interdum, nibh metus dignissim velit, at egestas augue lectus ac leo.</p>
+      <p>Morbi pellentesque sapien non pretium cursus. Nulla eget lorem porta, dictum nunc quis, fringilla lectus. Praesent pulvinar faucibus tellus, non maximus leo dictum a. Proin a feugiat ipsum.</p>
+      <p>Vivamus feugiat eros sed sapien cursus, in finibus mauris hendrerit. Etiam at neque vitae velit blandit euismod. Donec consequat elit et metus commodo, nec accumsan ante consequat.</p>
+      <p>Integer suscipit quam at leo elementum, quis rhoncus ligula posuere. Nunc et est eget tellus vestibulum dictum. Maecenas pretium tellus a leo malesuada, vitae commodo nibh bibendum.</p>
+      <p>Sed eu lectus et enim congue bibendum. Vestibulum ac suscipit velit. Duis non ipsum sit amet lacus pellentesque fermentum. Sed id orci ullamcorper, cursus justo nec, tincidunt metus.</p>
+      <p>Donec imperdiet aliquet lectus, vitae blandit est feugiat vitae. Integer sagittis neque in nunc elementum, a sollicitudin dolor interdum. Curabitur aliquet enim vitae quam aliquam, sit amet facilisis urna rhoncus.</p>
+    </section>
+  </main>
+</body>
+</html>

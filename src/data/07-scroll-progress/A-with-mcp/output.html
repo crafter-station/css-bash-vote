@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Scroll Progress</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.7;
+      color: #202124;
+      background: #fbfaf6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+    }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      width: 100%;
+      height: 10px;
+      background: #e4ded2;
+      box-shadow: 0 1px 8px rgba(32, 33, 36, 0.16);
+    }
+
+    .progress::before {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 100%;
+      transform: scaleX(0);
+      transform-origin: left center;
+      background: linear-gradient(90deg, #0077b6, #43aa8b, #f9c74f);
+      animation: fill-progress linear forwards;
+      animation-timeline: scroll(root block);
+      animation-range: 0% 100%;
+    }
+
+    @keyframes fill-progress {
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    @supports not (animation-timeline: scroll(root block)) {
+      .progress::before {
+        transform: scaleX(1);
+        animation: none;
+      }
+    }
+
+    main {
+      padding-top: 10px;
+    }
+
+    section {
+      min-height: 125vh;
+      padding: clamp(4rem, 8vw, 8rem) max(1.25rem, calc((100vw - 760px) / 2));
+      border-bottom: 1px solid #ded7ca;
+    }
+
+    section:nth-child(odd) {
+      background: #fbfaf6;
+    }
+
+    section:nth-child(even) {
+      background: #f1f7f4;
+    }
+
+    h1,
+    h2 {
+      line-height: 1.1;
+      letter-spacing: 0;
+      color: #111827;
+    }
+
+    h1 {
+      margin: 0 0 1.5rem;
+      font-size: 4.5rem;
+    }
+
+    h2 {
+      margin: 0 0 1.25rem;
+      font-size: 3rem;
+    }
+
+    p {
+      margin: 0 0 1.25rem;
+      font-size: 1.18rem;
+    }
+
+    .lede {
+      font-size: 1.4rem;
+      color: #3f4a55;
+    }
+
+    @media (max-width: 640px) {
+      h1 {
+        font-size: 2.6rem;
+      }
+
+      h2 {
+        font-size: 2.1rem;
+      }
+
+      p,
+      .lede {
+        font-size: 1.05rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"></div>
+
+  <main>
+    <section>
+      <h1>Scroll Progress</h1>
+      <p class="lede">This page uses only HTML and CSS. The horizontal bar fixed to the top edge fills as the document scrolls from its beginning to its end.</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer id ligula sed mi facilisis tempor. Donec suscipit justo vitae arcu consequat, id faucibus erat blandit. Sed in massa in risus tincidunt bibendum.</p>
+      <p>Praesent semper, justo a pulvinar faucibus, ipsum nisl fermentum magna, vitae condimentum leo lectus in magna. Mauris sit amet augue a lacus sollicitudin blandit. Vivamus hendrerit varius orci, a commodo sapien efficitur at.</p>
+      <p>Curabitur eleifend arcu at nulla luctus, vitae cursus mi venenatis. Suspendisse potenti. Nam malesuada quam ac arcu gravida, vitae porttitor odio tempor. Aliquam erat volutpat.</p>
+      <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Cras et pulvinar orci. Pellentesque vel ligula nunc. Etiam ut suscipit ex, non pulvinar neque.</p>
+      <p>Nullam iaculis faucibus nisl, vitae ullamcorper lorem posuere sed. Integer euismod posuere risus, ac aliquam turpis sagittis sit amet. Fusce tincidunt malesuada risus at facilisis.</p>
+    </section>
+
+    <section>
+      <h2>Section Two</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus porta lorem neque, vel mollis massa volutpat sed. Suspendisse lacinia pretium felis, sit amet pulvinar eros consequat non.</p>
+      <p>Morbi tempor nibh non sem interdum, nec suscipit enim bibendum. Duis a commodo mi. Quisque congue, nunc in porta lacinia, tortor ante pretium urna, eu blandit urna lorem vel lorem.</p>
+      <p>Sed fermentum mi eget felis vulputate, nec feugiat nisl dictum. Integer feugiat suscipit arcu, vitae egestas sem pharetra sed. Proin eget dignissim mi, sed gravida dolor.</p>
+      <p>Donec vitae tortor et nisi luctus posuere. Cras efficitur nisl a mi ullamcorper, vitae volutpat enim sagittis. Pellentesque imperdiet, ante a porta gravida, lacus mi posuere lectus, nec vulputate mauris metus vel risus.</p>
+      <p>Maecenas viverra mi quis magna hendrerit, sed cursus turpis dapibus. Duis quis blandit massa. Sed rhoncus elit vel tellus elementum, vel volutpat magna rhoncus.</p>
+    </section>
+
+    <section>
+      <h2>Section Three</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean finibus mauris id neque facilisis, in facilisis nibh placerat. Proin ut quam eu erat luctus elementum.</p>
+      <p>Vivamus vitae ipsum pharetra, convallis sem sit amet, faucibus nulla. Pellentesque sed mi sed augue faucibus efficitur. Etiam a ante vel libero eleifend dignissim quis at lacus.</p>
+      <p>Aliquam accumsan lacus eget ante finibus, at tincidunt erat viverra. Sed ornare elit non sem porttitor, et interdum augue aliquet. Nam id justo et est rutrum placerat.</p>
+      <p>Nunc pretium, sem non cursus fringilla, ipsum erat efficitur odio, in dignissim purus sem quis lacus. Curabitur rhoncus lacus at justo tempor, non porttitor mauris fermentum.</p>
+      <p>Suspendisse quis posuere ante. Nulla facilisi. Donec at nunc commodo, pharetra augue in, feugiat est. Integer quis justo nec libero blandit viverra.</p>
+    </section>
+
+    <section>
+      <h2>Section Four</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sagittis elit non lectus vehicula, nec volutpat lectus dignissim. Integer elementum lacinia libero, at faucibus lectus aliquam nec.</p>
+      <p>Ut in diam sed mi faucibus pharetra. Donec posuere sapien sed tortor imperdiet, ut venenatis dolor tristique. Cras et purus sit amet sapien eleifend blandit.</p>
+      <p>Nam tristique dictum quam, id dignissim metus cursus in. Vivamus cursus velit in mi cursus imperdiet. Etiam molestie, risus eget hendrerit dictum, tortor leo accumsan sapien, nec condimentum sem justo quis mi.</p>
+      <p>Fusce vel tristique purus. Integer commodo ex sed lectus faucibus, nec gravida urna vulputate. Duis sit amet sapien vel nibh viverra iaculis vitae nec augue.</p>
+      <p>Morbi facilisis lectus ut risus pharetra, vel egestas erat elementum. In faucibus lectus quis urna faucibus, a porta elit rutrum. Donec mollis dolor vitae quam venenatis, a bibendum lacus sodales.</p>
+    </section>
+
+    <section>
+      <h2>Section Five</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum at mi quis ante semper elementum. Pellentesque sed tincidunt arcu, a dignissim mi.</p>
+      <p>Integer nec tellus non eros sagittis iaculis. Maecenas a eros vitae arcu hendrerit pharetra. Sed feugiat, urna vitae tincidunt blandit, tortor nunc efficitur enim, sed posuere neque nisi at nibh.</p>
+      <p>Proin pulvinar lectus eget nibh pretium, eu blandit lorem ultrices. Aenean euismod massa nec ultricies cursus. Nulla id nunc vel velit ullamcorper gravida.</p>
+      <p>Donec ullamcorper, sapien id bibendum porta, risus risus scelerisque neque, et dignissim risus libero a erat. Sed eu tempor arcu. Integer facilisis magna eu justo dignissim, sit amet tempor nisi vulputate.</p>
+      <p>Curabitur interdum erat eget dolor posuere, quis venenatis lacus sodales. Praesent vitae risus ut ex fermentum luctus. Donec in tellus quis lectus condimentum dapibus non vel enim.</p>
+    </section>
+  </main>
+</body>
+</html>

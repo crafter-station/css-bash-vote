@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Tooltip Flip</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background:
+        linear-gradient(90deg, rgba(23, 32, 51, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(23, 32, 51, 0.06) 1px, transparent 1px),
+        #f7f3ea;
+      background-size: 48px 48px;
+    }
+
+    main {
+      position: relative;
+      min-height: 100svh;
+      padding: 2rem;
+    }
+
+    .demo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-grid;
+      place-items: center;
+    }
+
+    .demo:nth-of-type(1) {
+      top: 2rem;
+    }
+
+    .demo:nth-of-type(2) {
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .demo:nth-of-type(3) {
+      bottom: 2rem;
+    }
+
+    button {
+      min-width: 9rem;
+      border: 1px solid #172033;
+      border-radius: 0.5rem;
+      padding: 0.85rem 1rem;
+      font: inherit;
+      font-weight: 700;
+      color: #ffffff;
+      background: #172033;
+      box-shadow: 0 0.45rem 0 #d43d2c;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: #24324f;
+    }
+
+    button:focus-visible {
+      outline: 3px solid #2f7dd1;
+      outline-offset: 5px;
+    }
+
+    .tooltip {
+      position: fixed;
+      inset: auto;
+      z-index: 10;
+      max-width: min(18rem, calc(100vw - 2rem));
+      border: 1px solid rgba(23, 32, 51, 0.18);
+      border-radius: 0.45rem;
+      padding: 0.65rem 0.8rem;
+      color: #ffffff;
+      background: #172033;
+      box-shadow: 0 0.8rem 2rem rgba(23, 32, 51, 0.22);
+      font-size: 0.9rem;
+      line-height: 1.35;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 160ms ease, visibility 160ms ease;
+    }
+
+    .demo:hover .tooltip,
+    .demo:focus-within .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    @supports (anchor-name: --anchor) and (position-area: bottom) {
+      .button-top {
+        anchor-name: --button-top;
+      }
+
+      .button-middle {
+        anchor-name: --button-middle;
+      }
+
+      .button-bottom {
+        anchor-name: --button-bottom;
+      }
+
+      .tip-top {
+        position-anchor: --button-top;
+      }
+
+      .tip-middle {
+        position-anchor: --button-middle;
+      }
+
+      .tip-bottom {
+        position-anchor: --button-bottom;
+      }
+
+      .tooltip {
+        position-area: bottom;
+        position-try-fallbacks: flip-block;
+        margin: 0.65rem;
+      }
+    }
+
+    @supports not ((anchor-name: --anchor) and (position-area: bottom)) {
+      .tooltip {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .demo:nth-of-type(1) .tooltip,
+      .demo:nth-of-type(2) .tooltip {
+        top: calc(100% + 0.65rem);
+      }
+
+      .demo:nth-of-type(3) .tooltip {
+        bottom: calc(100% + 0.65rem);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main aria-label="Tooltip placement demo">
+    <div class="demo">
+      <button class="button-top" type="button" aria-describedby="tip-top">Top button</button>
+      <span class="tooltip tip-top" id="tip-top" role="tooltip">I start below because there is room beneath this button.</span>
+    </div>
+
+    <div class="demo">
+      <button class="button-middle" type="button" aria-describedby="tip-middle">Middle button</button>
+      <span class="tooltip tip-middle" id="tip-middle" role="tooltip">I also appear below unless the viewport leaves less room.</span>
+    </div>
+
+    <div class="demo">
+      <button class="button-bottom" type="button" aria-describedby="tip-bottom">Bottom button</button>
+      <span class="tooltip tip-bottom" id="tip-bottom" role="tooltip">I flip above automatically when below would hit the viewport edge.</span>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,181 @@
+---
+import { Header } from "../components/Header";
+import Layout from "../layouts/Layout.astro";
+import { getChallenges, getJudgements, getVariantSides } from "../lib/data";
+
+const { userId } = Astro.locals.auth();
+const challenges = getChallenges();
+const judgements = getJudgements();
+const variantSides = getVariantSides();
+---
+
+<Layout title="Results">
+  <Header isSignedIn={!!userId} client:load />
+
+  <main style="max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem;">
+    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin: 0 0 0.5rem;">Community results</h1>
+    <p style="color: var(--fg-dim); margin: 0 0 2rem; font-size: 0.95rem;">Aggregated votes from Crafter Station members. Variant A = with css-bash MCP. Variant B = without MCP.</p>
+
+    <!-- Scoreboard -->
+    <div id="scoreboard" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-secondary);">
+      <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 1rem;">Community scoreboard</div>
+      <div id="scoreboard-content" style="color: var(--fg-dim); font-size: 0.9rem;">Loading...</div>
+    </div>
+
+    <!-- Per-challenge -->
+    <div id="challenges-list">
+      {challenges.map((challenge) => {
+        const judg = judgements.find((j) => j.challengeId === challenge.id);
+        const sides = variantSides[challenge.id];
+        return (
+          <div class="challenge-row" data-challenge-id={challenge.id} style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-secondary);">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 4px;">{challenge.id}</div>
+                <div style="font-size: 1rem; font-weight: 700; color: var(--fg);">{challenge.title}</div>
+                <div style="font-size: 0.75rem; color: var(--fg-dim); margin-top: 4px;">Expected feature: <code style="font-family: monospace;">{challenge.expectedFeature}</code></div>
+              </div>
+              {judg && (
+                <span style={`font-size: 0.75rem; padding: 4px 12px; border-radius: 999px; border: 1px solid ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" && sides.left === "A-with-mcp" ? "#f59e0b" : judg.winner === "right" && sides.right === "A-with-mcp" ? "#f59e0b" : "#0ea5e9"}40; color: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" && sides.left === "A-with-mcp" ? "#f59e0b" : judg.winner === "right" && sides.right === "A-with-mcp" ? "#f59e0b" : "#0ea5e9"}; font-weight: 600; flex-shrink: 0;`}>
+                  Judge: {judg.winner === "tie" ? "Tie" : (
+                    (judg.winner === "left" && sides.left === "A-with-mcp") ||
+                    (judg.winner === "right" && sides.right === "A-with-mcp")
+                  ) ? "A wins" : "B wins"}
+                </span>
+              )}
+            </div>
+            <div class="vote-bar" data-challenge-id={challenge.id} style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <div style="color: var(--fg-dim); font-size: 0.8rem;">Loading votes...</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {userId && (
+      <div id="my-votes" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--line);">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 1rem;">Your votes</h2>
+        <div id="my-votes-content" style="color: var(--fg-dim); font-size: 0.9rem;">Loading...</div>
+      </div>
+    )}
+  </main>
+</Layout>
+
+<script define:vars={{ userId, challengesJson: JSON.stringify(challenges), variantSidesJson: JSON.stringify(variantSides) }}>
+  const challenges = JSON.parse(challengesJson);
+  const variantSides = JSON.parse(variantSidesJson);
+
+  async function loadStats() {
+    const [statsRes, dataRes] = await Promise.all([
+      fetch("/api/stats"),
+      userId ? fetch("/api/data") : Promise.resolve(null),
+    ]);
+
+    const { stats, totalVotes } = await statsRes.json();
+    const appData = dataRes ? await dataRes.json() : null;
+    const userVotes = appData ? Object.fromEntries(appData.userVotes.map((v) => [v.challengeId, v.choice])) : {};
+
+    const scoreboardEl = document.getElementById("scoreboard-content");
+    if (scoreboardEl) {
+      let aWins = 0;
+      let bWins = 0;
+      let ties = 0;
+
+      for (const challenge of challenges) {
+        const s = stats[challenge.id];
+        if (!s) continue;
+        const sides = variantSides[challenge.id];
+
+        const aVotes = (sides.left === "A-with-mcp" ? (s.left || 0) : (s.right || 0)) +
+                       (sides.right === "A-with-mcp" ? (s.right || 0) : 0);
+        const bVotes = (sides.left === "B-without-mcp" ? (s.left || 0) : 0) +
+                       (sides.right === "B-without-mcp" ? (s.right || 0) : 0);
+        const tieVotes = s.tie || 0;
+
+        if (aVotes > bVotes) aWins++;
+        else if (bVotes > aVotes) bWins++;
+        else if (tieVotes > 0 || aVotes === bVotes) ties++;
+      }
+
+      scoreboardEl.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: center;">
+          <div>
+            <div style="font-size: 2rem; font-weight: 800; color: #f59e0b;">${aWins}</div>
+            <div style="font-size: 0.8rem; color: var(--fg-dim);">Variant A wins</div>
+            <div style="font-size: 0.7rem; color: var(--fg-dim); margin-top: 2px;">with MCP</div>
+          </div>
+          <div>
+            <div style="font-size: 2rem; font-weight: 800; color: #0ea5e9;">${bWins}</div>
+            <div style="font-size: 0.8rem; color: var(--fg-dim);">Variant B wins</div>
+            <div style="font-size: 0.7rem; color: var(--fg-dim); margin-top: 2px;">without MCP</div>
+          </div>
+          <div>
+            <div style="font-size: 2rem; font-weight: 800; color: #eab308;">${ties}</div>
+            <div style="font-size: 0.8rem; color: var(--fg-dim);">Ties</div>
+          </div>
+          <div>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--fg);">${totalVotes}</div>
+            <div style="font-size: 0.8rem; color: var(--fg-dim);">Total votes</div>
+          </div>
+        </div>
+      `;
+    }
+
+    for (const challenge of challenges) {
+      const s = stats[challenge.id] || { left: 0, right: 0, tie: 0, total: 0 };
+      const total = s.total || 1;
+      const sides = variantSides[challenge.id];
+
+      const leftPct = Math.round(((s.left || 0) / total) * 100);
+      const rightPct = Math.round(((s.right || 0) / total) * 100);
+      const tiePct = Math.round(((s.tie || 0) / total) * 100);
+
+      const leftLabel = sides.left === "A-with-mcp" ? "A (with MCP)" : "B (no MCP)";
+      const rightLabel = sides.right === "A-with-mcp" ? "A (with MCP)" : "B (no MCP)";
+      const leftColor = sides.left === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
+      const rightColor = sides.right === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
+
+      const barEl = document.querySelector(`.vote-bar[data-challenge-id="${challenge.id}"]`);
+      if (barEl) {
+        barEl.innerHTML = `
+          <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden;">
+            <div style="width: ${leftPct}%; background: ${leftColor}; transition: width 0.5s; min-width: ${s.left ? '2%' : '0'};"></div>
+            <div style="width: ${tiePct}%; background: #eab308; transition: width 0.5s; min-width: ${s.tie ? '2%' : '0'};"></div>
+            <div style="width: ${rightPct}%; background: ${rightColor}; transition: width 0.5s; min-width: ${s.right ? '2%' : '0'};"></div>
+            ${s.total === 0 ? '<div style="width: 100%; background: var(--line);"></div>' : ''}
+          </div>
+          <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--fg-dim);">
+            <span>LEFT (${leftLabel}): <strong style="color: ${leftColor};">${leftPct}%</strong> (${s.left || 0})</span>
+            <span>Tie: <strong style="color: #eab308;">${tiePct}%</strong> (${s.tie || 0})</span>
+            <span>RIGHT (${rightLabel}): <strong style="color: ${rightColor};">${rightPct}%</strong> (${s.right || 0})</span>
+            <span style="margin-left: auto;">${s.total || 0} votes</span>
+          </div>
+        `;
+      }
+    }
+
+    if (userId) {
+      const myVotesEl = document.getElementById("my-votes-content");
+      if (myVotesEl) {
+        if (Object.keys(userVotes).length === 0) {
+          myVotesEl.innerHTML = `<p>You haven't voted yet. <a href="/vote" style="color: var(--fg);">Start voting →</a></p>`;
+        } else {
+          const rows = challenges.map((c) => {
+            const v = userVotes[c.id];
+            const sides = variantSides[c.id];
+            if (!v) return `<tr><td style="padding: 8px 0; color: var(--fg-dim);">${c.title}</td><td style="padding: 8px; color: var(--fg-dim);">—</td></tr>`;
+            const choiceLabel = v === "left"
+              ? `LEFT (${sides.left === "A-with-mcp" ? "A" : "B"})`
+              : v === "right"
+              ? `RIGHT (${sides.right === "A-with-mcp" ? "A" : "B"})`
+              : "Tie";
+            return `<tr><td style="padding: 8px 0; color: var(--fg);">${c.title}</td><td style="padding: 8px; color: var(--fg); font-weight: 600;">${choiceLabel}</td></tr>`;
+          }).join("");
+          myVotesEl.innerHTML = `<table style="width: 100%; border-collapse: collapse;">${rows}</table>`;
+        }
+      }
+    }
+  }
+
+  loadStats();
+</script>

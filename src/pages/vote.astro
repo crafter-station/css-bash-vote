@@ -1,0 +1,300 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const { userId } = Astro.locals.auth();
+
+if (!userId) {
+  return Astro.redirect("/sign-in");
+}
+---
+
+<Layout title="Vote">
+  <div id="vote-app" style="min-height: 100vh; background: var(--bg);">
+    <div id="loading" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; color: var(--fg-dim); font-size: 0.9rem;">
+      Loading challenges...
+    </div>
+  </div>
+</Layout>
+
+<script>
+  type Challenge = {
+    id: string;
+    title: string;
+    expectedFeature: string;
+    prompt: string;
+  };
+
+  type Judgement = {
+    challengeId: string;
+    left: { primitive: string; constraints: number; idiomatic: number; visual: number; reasoning: string };
+    right: { primitive: string; constraints: number; idiomatic: number; visual: number; reasoning: string };
+    winner: "left" | "right" | "tie";
+    verdict: string;
+  };
+
+  type VariantSide = { left: string; right: string };
+  type UserVote = { challengeId: string; choice: string };
+  type AppData = {
+    challenges: Challenge[];
+    judgements: Judgement[];
+    variantSides: Record<string, VariantSide>;
+    userVotes: UserVote[];
+    htmlMap: Record<string, Record<string, string>>;
+  };
+
+  let data: AppData | null = null;
+  let currentIndex = 0;
+  let showCode: Record<string, "left" | "right" | null> = {};
+  let showReveal: Record<string, boolean> = {};
+  let userVotes: Record<string, string> = {};
+  let freshlyVoted: Record<string, boolean> = {};
+
+  async function loadData() {
+    const res = await fetch("/api/data");
+    data = await res.json() as AppData;
+    for (const v of data.userVotes) {
+      userVotes[v.challengeId] = v.choice;
+    }
+    render();
+  }
+
+  async function submitVote(challengeId: string, choice: string) {
+    const res = await fetch("/api/vote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challengeId, choice }),
+    });
+    if (res.ok) {
+      const wasNew = !userVotes[challengeId];
+      userVotes[challengeId] = choice;
+      if (wasNew) {
+        freshlyVoted[challengeId] = true;
+        showReveal[challengeId] = true;
+      }
+      render();
+    }
+  }
+
+  function getHtml(challengeId: string, side: "left" | "right"): string {
+    if (!data) return "";
+    const variantKey = data.variantSides[challengeId][side];
+    return data.htmlMap[challengeId]?.[variantKey] ?? "";
+  }
+
+  function getJudgement(challengeId: string): Judgement | undefined {
+    return data?.judgements.find((j) => j.challengeId === challengeId);
+  }
+
+  function variantLabel(challengeId: string, side: "left" | "right"): string {
+    if (!data) return "";
+    const key = data.variantSides[challengeId][side];
+    return key === "A-with-mcp" ? "Variant A" : "Variant B";
+  }
+
+  function variantColor(challengeId: string, side: "left" | "right"): string {
+    if (!data) return "";
+    const key = data.variantSides[challengeId][side];
+    return key === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
+  }
+
+  function agreementBadge(judgement: Judgement, userChoice: string): string {
+    const judgeWon = judgement.winner;
+    if (judgeWon === "tie" && userChoice === "tie") return "agree";
+    if (judgeWon === userChoice) return "agree";
+    if (judgeWon === "tie" || userChoice === "tie") return "partial";
+    return "disagree";
+  }
+
+  function render() {
+    if (!data) return;
+    const app = document.getElementById("vote-app");
+    if (!app) return;
+
+    const challenge = data.challenges[currentIndex];
+    const voted = userVotes[challenge.id];
+    const judg = getJudgement(challenge.id);
+    const reveal = showReveal[challenge.id];
+    const leftCode = showCode[challenge.id] === "left";
+    const rightCode = showCode[challenge.id] === "right";
+    const leftHtml = getHtml(challenge.id, "left");
+    const rightHtml = getHtml(challenge.id, "right");
+
+    const badge = voted && judg ? agreementBadge(judg, voted) : null;
+    const badgeColor = badge === "agree" ? "#22c55e" : badge === "partial" ? "#eab308" : "#ef4444";
+    const badgeLabel = badge === "agree" ? "Agree with judge" : badge === "partial" ? "Partial match" : "Disagree with judge";
+
+    app.innerHTML = `
+      <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
+        <!-- Header bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; height: 48px; border-bottom: 1px solid var(--line); background: var(--bg); flex-shrink: 0;">
+          <a href="/" style="font-weight: 700; font-size: 0.9rem; color: var(--fg); text-decoration: none;">css<span style="color: #f59e0b;">-bash</span></a>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span style="font-size: 0.8rem; color: var(--fg-dim);">${currentIndex + 1} / ${data.challenges.length}</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--fg); max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${challenge.title}</span>
+            <a href="/results" style="font-size: 0.8rem; color: var(--fg-dim); text-decoration: none; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px;">Results</a>
+          </div>
+        </div>
+
+        <!-- Main split panes -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; position: relative;">
+          <!-- LEFT pane -->
+          <div style="position: relative; border-right: 1px solid var(--line); overflow: hidden;">
+            <div style="position: absolute; top: 8px; left: 8px; z-index: 10; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 8px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 4px; letter-spacing: 0.05em;">LEFT</span>
+            </div>
+            <button id="left-toggle" title="Toggle code" style="position: absolute; top: 8px; right: 8px; z-index: 10; background: rgba(0,0,0,0.5); border: none; color: #fff; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">
+              ${leftCode ? "👁" : "</>"}
+            </button>
+            ${leftCode
+              ? `<div id="left-code" style="height: 100%; overflow: auto; background: var(--bg-secondary); padding: 1rem; font-family: monospace; font-size: 0.8rem; white-space: pre; color: var(--fg);"></div>`
+              : `<iframe id="left-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin" style="width: 100%; height: 100%; border: none; background: #fff;"></iframe>`
+            }
+          </div>
+
+          <!-- RIGHT pane -->
+          <div style="position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 8px; left: 8px; z-index: 10; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 8px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 4px; letter-spacing: 0.05em;">RIGHT</span>
+            </div>
+            <button id="right-toggle" title="Toggle code" style="position: absolute; top: 8px; right: 8px; z-index: 10; background: rgba(0,0,0,0.5); border: none; color: #fff; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">
+              ${rightCode ? "👁" : "</>"}
+            </button>
+            ${rightCode
+              ? `<div id="right-code" style="height: 100%; overflow: auto; background: var(--bg-secondary); padding: 1rem; font-family: monospace; font-size: 0.8rem; white-space: pre; color: var(--fg);"></div>`
+              : `<iframe id="right-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin" style="width: 100%; height: 100%; border: none; background: #fff;"></iframe>`
+            }
+          </div>
+        </div>
+
+        <!-- Bottom action row -->
+        <div style="flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+          <button id="btn-prev" style="padding: 6px 14px; background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--fg); cursor: pointer; font-size: 0.85rem;" ${currentIndex === 0 ? "disabled" : ""}>← back</button>
+
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+            ${!voted ? `
+              <button id="btn-left" style="padding: 8px 20px; background: none; border: 2px solid #f59e0b; border-radius: 8px; color: #f59e0b; font-weight: 700; cursor: pointer; font-size: 0.9rem;">LEFT wins</button>
+              <button id="btn-tie" style="padding: 8px 20px; background: none; border: 2px solid var(--fg-dim); border-radius: 8px; color: var(--fg-dim); font-weight: 700; cursor: pointer; font-size: 0.9rem;">= tie</button>
+              <button id="btn-right" style="padding: 8px 20px; background: none; border: 2px solid #0ea5e9; border-radius: 8px; color: #0ea5e9; font-weight: 700; cursor: pointer; font-size: 0.9rem;">RIGHT wins</button>
+            ` : `
+              <span style="font-size: 0.85rem; color: var(--fg-dim);">voted: <strong style="color: var(--fg);">${voted.toUpperCase()}</strong></span>
+              ${badge ? `<span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; border: 1px solid ${badgeColor}; color: ${badgeColor};">${badgeLabel}</span>` : ""}
+              <button id="btn-reveal" style="padding: 6px 14px; background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--fg); cursor: pointer; font-size: 0.85rem;">${reveal ? "hide judge" : "see judge"}</button>
+            `}
+          </div>
+
+          <button id="btn-next" style="padding: 6px 14px; background: ${currentIndex < data.challenges.length - 1 ? "var(--fg)" : "none"}; border: 1px solid var(--line); border-radius: 6px; color: ${currentIndex < data.challenges.length - 1 ? "var(--bg)" : "var(--fg-dim)"}; cursor: pointer; font-size: 0.85rem;" ${currentIndex >= data.challenges.length - 1 && !voted ? "disabled" : ""}>${currentIndex < data.challenges.length - 1 ? "next →" : "results →"}</button>
+        </div>
+
+        <!-- Reveal panel -->
+        ${reveal && judg ? `
+        <div id="reveal-panel" style="position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-secondary); border-top: 1px solid var(--line); padding: 1.5rem; z-index: 100; transform: translateY(0); transition: transform 0.3s ease; max-height: 60vh; overflow-y: auto;">
+          <div style="max-width: 900px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Judge verdict</h3>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <span style="font-size: 0.8rem; color: var(--fg-dim);">
+                  LEFT was <strong style="color: ${variantColor(challenge.id, "left")};">${variantLabel(challenge.id, "left")}</strong> · RIGHT was <strong style="color: ${variantColor(challenge.id, "right")};">${variantLabel(challenge.id, "right")}</strong>
+                </span>
+                <span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; background: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}20; color: ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}; border: 1px solid ${judg.winner === "tie" ? "#eab308" : judg.winner === "left" ? "#f59e0b" : "#0ea5e9"}40;">
+                  ${judg.winner === "tie" ? "Tie" : judg.winner === "left" ? "LEFT wins" : "RIGHT wins"}
+                </span>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              ${(["left", "right"] as const).map(side => {
+                const s = judg[side];
+                return `
+                <div style="padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+                  <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: ${variantColor(challenge.id, side)}; margin-bottom: 8px;">${side.toUpperCase()} · ${variantLabel(challenge.id, side)}</div>
+                  <div style="display: flex; gap: 0.5rem; margin-bottom: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">constraints: ${s.constraints}/3</span>
+                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">idiomatic: ${s.idiomatic}/5</span>
+                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">visual: ${s.visual}/5</span>
+                    <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-secondary);">primitive: ${s.primitive}</span>
+                  </div>
+                  <p style="margin: 0; font-size: 0.8rem; color: var(--fg-dim); line-height: 1.5;">${s.reasoning}</p>
+                </div>`;
+              }).join("")}
+            </div>
+            <div style="padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); margin-bottom: 6px;">Verdict</div>
+              <p style="margin: 0; font-size: 0.875rem; color: var(--fg); line-height: 1.6;">${judg.verdict}</p>
+            </div>
+          </div>
+        </div>
+        ` : ""}
+      </div>
+    `;
+
+    const leftIframe = document.getElementById("left-iframe") as HTMLIFrameElement | null;
+    const rightIframe = document.getElementById("right-iframe") as HTMLIFrameElement | null;
+    const leftCodeEl = document.getElementById("left-code") as HTMLElement | null;
+    const rightCodeEl = document.getElementById("right-code") as HTMLElement | null;
+
+    if (leftIframe) leftIframe.srcdoc = leftHtml;
+    if (rightIframe) rightIframe.srcdoc = rightHtml;
+    if (leftCodeEl) leftCodeEl.textContent = leftHtml;
+    if (rightCodeEl) rightCodeEl.textContent = rightHtml;
+
+    document.getElementById("btn-prev")?.addEventListener("click", () => {
+      if (currentIndex > 0) { currentIndex--; render(); }
+    });
+
+    document.getElementById("btn-next")?.addEventListener("click", () => {
+      if (currentIndex < data!.challenges.length - 1) {
+        currentIndex++;
+        render();
+      } else {
+        window.location.href = "/results";
+      }
+    });
+
+    document.getElementById("btn-left")?.addEventListener("click", () => {
+      submitVote(challenge.id, "left");
+    });
+    document.getElementById("btn-tie")?.addEventListener("click", () => {
+      submitVote(challenge.id, "tie");
+    });
+    document.getElementById("btn-right")?.addEventListener("click", () => {
+      submitVote(challenge.id, "right");
+    });
+
+    document.getElementById("btn-reveal")?.addEventListener("click", () => {
+      showReveal[challenge.id] = !showReveal[challenge.id];
+      render();
+    });
+
+    document.getElementById("left-toggle")?.addEventListener("click", () => {
+      showCode[challenge.id] = showCode[challenge.id] === "left" ? null : "left";
+      render();
+    });
+    document.getElementById("right-toggle")?.addEventListener("click", () => {
+      showCode[challenge.id] = showCode[challenge.id] === "right" ? null : "right";
+      render();
+    });
+  }
+
+  function handleKey(e: KeyboardEvent) {
+    if (!data) return;
+    const challenge = data.challenges[currentIndex];
+    if (e.key === "ArrowLeft") {
+      if (currentIndex > 0) { currentIndex--; render(); }
+    } else if (e.key === "ArrowRight") {
+      if (currentIndex < data.challenges.length - 1) { currentIndex++; render(); }
+    } else if (e.key === "1") {
+      submitVote(challenge.id, "left");
+    } else if (e.key === "2") {
+      submitVote(challenge.id, "tie");
+    } else if (e.key === "3") {
+      submitVote(challenge.id, "right");
+    } else if (e.key === "c") {
+      showCode[challenge.id] = showCode[challenge.id] ? null : "left";
+      render();
+    } else if (e.key === "s") {
+      window.location.href = "/results";
+    }
+  }
+
+  document.addEventListener("keydown", handleKey);
+  loadData();
+</script>

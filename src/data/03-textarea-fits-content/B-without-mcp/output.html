@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick Note</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f7f9;
+      color: #20242a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+    }
+
+    .note-field {
+      width: min(100%, 34rem);
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.95rem;
+      font-weight: 650;
+      line-height: 1.2;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: calc(1lh + 1rem + 2px);
+      field-sizing: content;
+      resize: none;
+      overflow: hidden;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #b7bec8;
+      border-radius: 0.5rem;
+      background: #ffffff;
+      color: inherit;
+      font: inherit;
+      line-height: 1.45;
+    }
+
+    textarea:focus {
+      border-color: #2563eb;
+      outline: 3px solid #bfdbfe;
+      outline-offset: 0;
+    }
+
+    textarea::placeholder {
+      color: #697384;
+    }
+  </style>
+</head>
+<body>
+  <div class="note-field">
+    <label for="quick-note">Quick note</label>
+    <textarea id="quick-note" name="quick-note" placeholder="Type a quick note"></textarea>
+  </div>
+</body>
+</html>

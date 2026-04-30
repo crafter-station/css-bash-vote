@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Layout Toggle</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1d2329;
+      background: #f4f1ec;
+    }
+
+    main {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 3vw, 2.3rem);
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 700;
+      color: #fff;
+      background: #23645d;
+      cursor: pointer;
+      transition: background-color 180ms ease, transform 180ms ease;
+    }
+
+    button:hover {
+      background: #194f49;
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid #e0a83b;
+      outline-offset: 3px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .products.is-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      display: grid;
+      grid-template-columns: 136px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      min-width: 0;
+      min-height: 150px;
+      padding: 16px;
+      border: 1px solid #d9d2c8;
+      border-radius: 8px;
+      background: #fffdf9;
+      box-shadow: 0 12px 28px rgba(39, 45, 47, .08);
+      transition: box-shadow 250ms ease;
+    }
+
+    .products:not(.is-grid) .card {
+      grid-column: 1 / -1;
+    }
+
+    .is-grid .card {
+      grid-template-columns: 1fr;
+      align-content: start;
+      min-height: 310px;
+    }
+
+    .swatch {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      aspect-ratio: 1.18;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, .9);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .is-grid .swatch {
+      aspect-ratio: 1.45;
+    }
+
+    .card:nth-child(1) .swatch { background: #c95d47; }
+    .card:nth-child(2) .swatch { background: #3066a3; }
+    .card:nth-child(3) .swatch { background: #5b7f43; }
+    .card:nth-child(4) .swatch { background: #8d5a99; }
+    .card:nth-child(5) .swatch { background: #bb7b22; }
+    .card:nth-child(6) .swatch { background: #3f7f83; }
+
+    .card:nth-child(1) { view-transition-name: product-one; }
+    .card:nth-child(2) { view-transition-name: product-two; }
+    .card:nth-child(3) { view-transition-name: product-three; }
+    .card:nth-child(4) { view-transition-name: product-four; }
+    .card:nth-child(5) { view-transition-name: product-five; }
+    .card:nth-child(6) { view-transition-name: product-six; }
+
+    ::view-transition-group(product-one),
+    ::view-transition-group(product-two),
+    ::view-transition-group(product-three),
+    ::view-transition-group(product-four),
+    ::view-transition-group(product-five),
+    ::view-transition-group(product-six) {
+      animation-duration: 650ms;
+      animation-timing-function: cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .content {
+      min-width: 0;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .card p {
+      margin: 0 0 14px;
+      color: #5c646b;
+      line-height: 1.45;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: #252b30;
+      font-weight: 700;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: #31504c;
+      background: #dfeae4;
+      font-size: .78rem;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 760px) {
+      .toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .products,
+      .products.is-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card,
+      .is-grid .card {
+        grid-template-columns: 104px minmax(0, 1fr);
+        min-height: 132px;
+      }
+
+      .swatch,
+      .is-grid .swatch {
+        aspect-ratio: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after,
+      ::view-transition-group(*) {
+        transition-duration: 1ms !important;
+        animation-duration: 1ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="toolbar">
+      <h1>Products</h1>
+      <button type="button" id="layoutToggle" aria-pressed="false">Switch layout</button>
+    </div>
+
+    <section class="products" id="products" aria-label="Product cards">
+      <article class="card">
+        <div class="swatch">A</div>
+        <div class="content">
+          <h2>Atlas Desk Lamp</h2>
+          <p>Adjustable task lighting with a weighted steel base and warm dimming.</p>
+          <div class="meta"><span>$84</span><span class="tag">Lighting</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatch">B</div>
+        <div class="content">
+          <h2>Bay Linen Throw</h2>
+          <p>Soft woven linen blend sized for sofas, reading chairs, and travel.</p>
+          <div class="meta"><span>$58</span><span class="tag">Home</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatch">C</div>
+        <div class="content">
+          <h2>Cinder Planter</h2>
+          <p>Matte ceramic planter with drainage tray for herbs and small plants.</p>
+          <div class="meta"><span>$36</span><span class="tag">Garden</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatch">D</div>
+        <div class="content">
+          <h2>Dune Carry Tote</h2>
+          <p>Structured canvas tote with internal pockets and reinforced handles.</p>
+          <div class="meta"><span>$72</span><span class="tag">Bags</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatch">E</div>
+        <div class="content">
+          <h2>Ember Kettle</h2>
+          <p>Compact stovetop kettle with quick pour balance and heatproof grip.</p>
+          <div class="meta"><span>$49</span><span class="tag">Kitchen</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatch">F</div>
+        <div class="content">
+          <h2>Field Notebook Set</h2>
+          <p>Three lay-flat notebooks with recycled paper and durable covers.</p>
+          <div class="meta"><span>$24</span><span class="tag">Office</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const button = document.getElementById('layoutToggle');
+    const products = document.getElementById('products');
+
+    const switchLayout = () => {
+      const isGrid = products.classList.toggle('is-grid');
+      button.setAttribute('aria-pressed', String(isGrid));
+    };
+
+    button.addEventListener('click', () => {
+      if (document.startViewTransition) {
+        document.startViewTransition(switchLayout);
+        return;
+      }
+
+      switchLayout();
+    });
+  </script>
+</body>
+</html>

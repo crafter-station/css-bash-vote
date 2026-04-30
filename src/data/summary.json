@@ -1,0 +1,426 @@
+{
+  "results": [
+    {
+      "challengeId": "01-popover-flip",
+      "variant": "A-with-mcp",
+      "durationMs": 81776,
+      "exitCode": 0,
+      "htmlBytes": 4089,
+      "keywordsHit": ["anchor-name", "position-anchor", "position-try"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "01-popover-flip",
+      "variant": "B-without-mcp",
+      "durationMs": 69112,
+      "exitCode": 0,
+      "htmlBytes": 3757,
+      "keywordsHit": ["anchor-name", "position-anchor", "position-try"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "02-form-valid-submit",
+      "variant": "A-with-mcp",
+      "durationMs": 67476,
+      "exitCode": 0,
+      "htmlBytes": 2296,
+      "keywordsHit": [":invalid", ":valid"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "02-form-valid-submit",
+      "variant": "B-without-mcp",
+      "durationMs": 38064,
+      "exitCode": 0,
+      "htmlBytes": 2367,
+      "keywordsHit": [":has(", ":invalid"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "03-textarea-fits-content",
+      "variant": "A-with-mcp",
+      "durationMs": 45133,
+      "exitCode": 0,
+      "htmlBytes": 1509,
+      "keywordsHit": ["field-sizing"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "03-textarea-fits-content",
+      "variant": "B-without-mcp",
+      "durationMs": 30917,
+      "exitCode": 0,
+      "htmlBytes": 1454,
+      "keywordsHit": ["field-sizing"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "04-list-grid-toggle",
+      "variant": "A-with-mcp",
+      "durationMs": 134668,
+      "exitCode": 0,
+      "htmlBytes": 8152,
+      "keywordsHit": [
+        "view-transition",
+        "::view-transition",
+        "view-transition-name"
+      ],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "04-list-grid-toggle",
+      "variant": "B-without-mcp",
+      "durationMs": 149262,
+      "exitCode": 0,
+      "htmlBytes": 7410,
+      "keywordsHit": [
+        "view-transition",
+        "::view-transition",
+        "view-transition-name"
+      ],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "05-light-dark-card",
+      "variant": "A-with-mcp",
+      "durationMs": 56272,
+      "exitCode": 0,
+      "htmlBytes": 2398,
+      "keywordsHit": ["light-dark(", "color-scheme"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "05-light-dark-card",
+      "variant": "B-without-mcp",
+      "durationMs": 68614,
+      "exitCode": 0,
+      "htmlBytes": 2297,
+      "keywordsHit": ["light-dark(", "color-scheme"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "06-accordion-zero-to-auto",
+      "variant": "A-with-mcp",
+      "durationMs": 79941,
+      "exitCode": 0,
+      "htmlBytes": 3817,
+      "keywordsHit": ["interpolate-size", "allow-keywords"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "06-accordion-zero-to-auto",
+      "variant": "B-without-mcp",
+      "durationMs": 74611,
+      "exitCode": 0,
+      "htmlBytes": 4868,
+      "keywordsHit": ["interpolate-size", "allow-keywords"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "07-scroll-progress",
+      "variant": "A-with-mcp",
+      "durationMs": 146065,
+      "exitCode": 0,
+      "htmlBytes": 7587,
+      "keywordsHit": ["animation-timeline", "scroll("],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "07-scroll-progress",
+      "variant": "B-without-mcp",
+      "durationMs": 127262,
+      "exitCode": 0,
+      "htmlBytes": 9415,
+      "keywordsHit": ["animation-timeline", "scroll("],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "08-scoped-rules",
+      "variant": "A-with-mcp",
+      "durationMs": 44863,
+      "exitCode": 0,
+      "htmlBytes": 1615,
+      "keywordsHit": ["@scope", "to ("],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "08-scoped-rules",
+      "variant": "B-without-mcp",
+      "durationMs": 40505,
+      "exitCode": 0,
+      "htmlBytes": 2151,
+      "keywordsHit": ["@scope", "to ("],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "09-balanced-headline",
+      "variant": "A-with-mcp",
+      "durationMs": 44753,
+      "exitCode": 0,
+      "htmlBytes": 1175,
+      "keywordsHit": ["text-wrap", "balance"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "09-balanced-headline",
+      "variant": "B-without-mcp",
+      "durationMs": 36800,
+      "exitCode": 0,
+      "htmlBytes": 1295,
+      "keywordsHit": ["text-wrap", "balance"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "10-typed-animated-prop",
+      "variant": "A-with-mcp",
+      "durationMs": 50838,
+      "exitCode": 0,
+      "htmlBytes": 1947,
+      "keywordsHit": ["@property", "syntax:", "inherits:", "initial-value:"],
+      "mcpUsed": false
+    },
+    {
+      "challengeId": "10-typed-animated-prop",
+      "variant": "B-without-mcp",
+      "durationMs": 42530,
+      "exitCode": 0,
+      "htmlBytes": 1654,
+      "keywordsHit": ["@property", "syntax:", "inherits:", "initial-value:"],
+      "mcpUsed": false
+    }
+  ],
+  "judgements": [
+    {
+      "challengeId": "01-popover-flip",
+      "left": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 4,
+        "reasoning": "The left solution uses modern CSS primitives like 'position-area' and 'position-try-fallbacks' for tooltip positioning, with a fallback for unsupported browsers. It satisfies all constraints by being self-contained and using inline styles, and the grid layout is idiomatic for centering elements."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The right solution also uses modern CSS primitives effectively and provides a fallback for unsupported browsers. It adheres to all constraints and uses a more idiomatic approach with semantic HTML and ARIA attributes, enhancing accessibility and clarity."
+      },
+      "winner": "right",
+      "verdict": "The right solution is stronger due to its more idiomatic use of semantic HTML and accessibility features, while still leveraging modern CSS primitives effectively."
+    },
+    {
+      "challengeId": "02-form-valid-submit",
+      "left": {
+        "primitive": "partial",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 4,
+        "reasoning": "The left solution uses the ':valid' pseudo-class to enable the button, which is a modern approach, but it doesn't fully leverage ':has()' for more precise control. It satisfies all constraints and provides a visually appealing result, but could be more idiomatic by using ':has()' for button state management."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The right solution correctly uses the ':has()' pseudo-class to manage the button's state based on input validity, showcasing a modern CSS approach. It meets all constraints and provides a clean, idiomatic, and visually consistent implementation."
+      },
+      "winner": "right",
+      "verdict": "The right solution is stronger due to its use of the ':has()' pseudo-class, which provides a more modern and idiomatic approach to managing form validation states."
+    },
+    {
+      "challengeId": "03-textarea-fits-content",
+      "left": {
+        "primitive": "partial",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 4,
+        "reasoning": "The left solution uses 'field-sizing: content' which is a modern CSS feature, but it is not yet widely supported and doesn't achieve the desired effect of auto-resizing the textarea. It satisfies all constraints by being self-contained and using no JavaScript, and the code is clean and idiomatic."
+      },
+      "right": {
+        "primitive": "partial",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 4,
+        "reasoning": "The right solution also uses 'field-sizing: content', which is a modern approach but not fully supported, thus not achieving the auto-resize functionality. It adheres to all constraints and presents a clean, idiomatic style similar to the left solution."
+      },
+      "winner": "tie",
+      "verdict": "Both solutions are equally strong in terms of constraint adherence and code quality, but neither fully achieves the auto-resize functionality due to the current limitations of CSS primitives."
+    },
+    {
+      "challengeId": "04-list-grid-toggle",
+      "left": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 5,
+        "reasoning": "The left solution uses modern CSS primitives like CSS Grid and the view-transition-name property effectively for smooth transitions. It adheres to all constraints, providing a smooth animated morph between layouts without keyframe animations."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 5,
+        "reasoning": "The right solution also employs modern CSS features such as CSS Grid and view-transition-name for transitions. It meets all constraints and provides a clean, visually appealing layout toggle with smooth animations."
+      },
+      "winner": "tie",
+      "verdict": "Both solutions effectively use modern CSS features and meet all constraints, resulting in a tie."
+    },
+    {
+      "challengeId": "05-light-dark-card",
+      "left": {
+        "primitive": "missing",
+        "constraints": 2,
+        "idiomatic": 3,
+        "visual": 4,
+        "reasoning": "The left solution uses a custom 'light-dark' function which is not a standard CSS primitive, failing to meet the requirement of using modern CSS features. It satisfies the constraints of not using prefers-color-scheme and not duplicating color values, but the approach is not idiomatic as it relies on a non-standard method."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 5,
+        "reasoning": "The right solution uses the 'color-mix()' function, a modern CSS primitive, to blend colors for shadows, demonstrating a correct use of recent CSS features. It meets all constraints and provides a more idiomatic and visually appealing solution by leveraging standard CSS capabilities."
+      },
+      "winner": "right",
+      "verdict": "The right solution is stronger due to its use of modern CSS primitives and full adherence to the challenge constraints."
+    },
+    {
+      "challengeId": "06-accordion-zero-to-auto",
+      "left": {
+        "primitive": "missing",
+        "constraints": 2,
+        "idiomatic": 3,
+        "visual": 4,
+        "reasoning": "The left solution uses a JavaScript workaround to toggle height, missing the opportunity to use the 'details' and 'summary' elements for intrinsic height transitions. It satisfies the constraints of being self-contained and animating height, but it does not use modern CSS primitives effectively."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The right solution leverages the 'details' and 'summary' elements, which naturally handle the open/close state and intrinsic height transitions, fulfilling all constraints. It uses modern CSS primitives effectively, resulting in a minimal and idiomatic solution."
+      },
+      "winner": "right",
+      "verdict": "The right solution is stronger because it uses modern CSS primitives effectively, resulting in a more idiomatic and constraint-compliant implementation."
+    },
+    {
+      "challengeId": "07-scroll-progress",
+      "left": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 4,
+        "reasoning": "The left solution uses the modern CSS 'animation-timeline' property to achieve the scroll-based animation without JavaScript, which is a recent and appropriate CSS primitive. It satisfies all constraints by being self-contained and using no JavaScript, and the visual implementation is clear and effective."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 4,
+        "reasoning": "The right solution also employs the 'animation-timeline' property, correctly using modern CSS to handle the scroll progress bar. It adheres to all constraints and provides a visually appealing result, with a clean and idiomatic approach to styling."
+      },
+      "winner": "tie",
+      "verdict": "Both solutions effectively use modern CSS primitives and satisfy all constraints, resulting in a tie due to their equally strong approaches."
+    },
+    {
+      "challengeId": "08-scoped-rules",
+      "left": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The left solution correctly uses the modern CSS @scope rule to manage the color of paragraphs within the scoped card, respecting the preview boundary. It adheres to all constraints by keeping the solution self-contained and without additional classes or inline styles."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The right solution also uses the modern CSS @scope rule effectively to achieve the desired paragraph color changes within the scoped card and preview boundary. It meets all constraints and maintains a clean, self-contained structure."
+      },
+      "winner": "tie",
+      "verdict": "Both solutions effectively use modern CSS primitives and adhere to all constraints, resulting in a tie."
+    },
+    {
+      "challengeId": "09-balanced-headline",
+      "left": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The solution uses the 'text-wrap: balance' property, which is a modern CSS feature for balancing text lines. It adheres to all constraints by using inline styles, a fixed width for the headline, and no external resources."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 4,
+        "visual": 5,
+        "reasoning": "This solution also uses 'text-wrap: balance' effectively and meets all constraints. However, it introduces additional complexity with responsive width and font size adjustments that are not strictly necessary for the challenge."
+      },
+      "winner": "left",
+      "verdict": "The left solution is stronger due to its simplicity and direct adherence to the challenge requirements without unnecessary complexity."
+    },
+    {
+      "challengeId": "10-typed-animated-prop",
+      "left": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "The solution uses the @property CSS feature to animate a custom property, which is a modern approach. It satisfies all constraints by being self-contained, using inline styles, and toggling a class with minimal JavaScript."
+      },
+      "right": {
+        "primitive": "modern",
+        "constraints": 3,
+        "idiomatic": 5,
+        "visual": 5,
+        "reasoning": "This solution also uses the @property CSS feature correctly to animate a custom property, adhering to modern CSS practices. It meets all constraints and provides a visually appealing result with a slightly different aesthetic approach."
+      },
+      "winner": "tie",
+      "verdict": "Both solutions effectively use modern CSS features and meet all constraints, resulting in a tie."
+    }
+  ],
+  "variantSides": {
+    "01-popover-flip": {
+      "left": "B-without-mcp",
+      "right": "A-with-mcp"
+    },
+    "02-form-valid-submit": {
+      "left": "A-with-mcp",
+      "right": "B-without-mcp"
+    },
+    "03-textarea-fits-content": {
+      "left": "A-with-mcp",
+      "right": "B-without-mcp"
+    },
+    "04-list-grid-toggle": {
+      "left": "A-with-mcp",
+      "right": "B-without-mcp"
+    },
+    "05-light-dark-card": {
+      "left": "B-without-mcp",
+      "right": "A-with-mcp"
+    },
+    "06-accordion-zero-to-auto": {
+      "left": "B-without-mcp",
+      "right": "A-with-mcp"
+    },
+    "07-scroll-progress": {
+      "left": "A-with-mcp",
+      "right": "B-without-mcp"
+    },
+    "08-scoped-rules": {
+      "left": "B-without-mcp",
+      "right": "A-with-mcp"
+    },
+    "09-balanced-headline": {
+      "left": "A-with-mcp",
+      "right": "B-without-mcp"
+    },
+    "10-typed-animated-prop": {
+      "left": "B-without-mcp",
+      "right": "A-with-mcp"
+    }
+  }
+}

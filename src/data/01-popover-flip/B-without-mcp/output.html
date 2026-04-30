@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Tooltip Flip</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 1fr 1fr 1fr;
+      place-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #17202a;
+      background:
+        linear-gradient(#d7dee8 1px, transparent 1px),
+        linear-gradient(90deg, #d7dee8 1px, transparent 1px),
+        #f7f9fc;
+      background-size: 44px 44px;
+    }
+
+    .slot {
+      width: min(100%, 64rem);
+      min-height: 33.333vh;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+    }
+
+    .slot:first-child {
+      align-items: start;
+      padding-top: 1.25rem;
+    }
+
+    .slot:last-child {
+      align-items: end;
+      padding-bottom: 1.25rem;
+    }
+
+    .tooltip-button {
+      appearance: none;
+      border: 1px solid #155c8b;
+      border-radius: 0.5rem;
+      padding: 0.8rem 1rem;
+      min-width: 12rem;
+      color: white;
+      background: #1976ad;
+      font: inherit;
+      font-weight: 700;
+      letter-spacing: 0;
+      box-shadow: 0 0.55rem 1.2rem rgb(25 118 173 / 0.22);
+      cursor: pointer;
+    }
+
+    .tooltip-button:hover,
+    .tooltip-button:focus-visible {
+      background: #125e8c;
+    }
+
+    .tooltip-button:focus-visible {
+      outline: 3px solid #f4c84a;
+      outline-offset: 3px;
+    }
+
+    .top {
+      anchor-name: --top-button;
+    }
+
+    .middle {
+      anchor-name: --middle-button;
+    }
+
+    .bottom {
+      anchor-name: --bottom-button;
+    }
+
+    .tooltip-button::after {
+      position: fixed;
+      z-index: 10;
+      max-width: min(18rem, calc(100vw - 2rem));
+      padding: 0.55rem 0.7rem;
+      border-radius: 0.45rem;
+      color: #fff;
+      background: #222831;
+      box-shadow: 0 0.65rem 1.4rem rgb(20 26 34 / 0.22);
+      font-size: 0.875rem;
+      font-weight: 600;
+      line-height: 1.25;
+      text-align: center;
+      white-space: normal;
+      opacity: 0;
+      transform: scale(0.98);
+      transition: opacity 140ms ease, transform 140ms ease;
+      pointer-events: none;
+      content: attr(data-tooltip);
+      position-area: block-end center;
+      position-try-fallbacks: flip-block;
+      margin: 0.65rem;
+    }
+
+    .top::after {
+      position-anchor: --top-button;
+    }
+
+    .middle::after {
+      position-anchor: --middle-button;
+    }
+
+    .bottom::after {
+      position-anchor: --bottom-button;
+    }
+
+    .tooltip-button:hover::after,
+    .tooltip-button:focus-visible::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    @supports not (position-area: block-end center) {
+      .tooltip-button {
+        position: relative;
+      }
+
+      .tooltip-button::after {
+        position: absolute;
+        left: 50%;
+        bottom: auto;
+        top: calc(100% + 0.65rem);
+        transform: translateX(-50%) scale(0.98);
+      }
+
+      .tooltip-button:hover::after,
+      .tooltip-button:focus-visible::after {
+        transform: translateX(-50%) scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="slot">
+    <button class="tooltip-button top" data-tooltip="I have room below, so I open below.">Top Button</button>
+  </div>
+
+  <div class="slot">
+    <button class="tooltip-button middle" data-tooltip="I also open below because there is enough viewport space.">Middle Button</button>
+  </div>
+
+  <div class="slot">
+    <button class="tooltip-button bottom" data-tooltip="I flip above automatically when below would overflow.">Bottom Button</button>
+  </div>
+</body>
+</html>
