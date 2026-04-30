@@ -1,0 +1,532 @@
+---
+import Header from "../../components/Header.astro";
+import Layout from "../../layouts/Layout.astro";
+
+const { userId } = Astro.locals.auth();
+
+if (!userId) {
+  return Astro.redirect("/vote");
+}
+
+const roundSlug = Astro.url.searchParams.get("round") ?? "";
+---
+
+<Layout title="Your Results">
+  <Header isSignedIn={true} />
+
+  <style is:global>
+    .me-round-selector {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 0 1rem;
+      scroll-snap-type: x mandatory;
+    }
+    .me-round-selector::-webkit-scrollbar { display: none; }
+    .me-round-pill {
+      flex-shrink: 0;
+      padding: 5px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: none;
+      color: var(--fg-dim);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      scroll-snap-align: start;
+      text-decoration: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+    .me-round-pill:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+    .me-round-pill.active {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+      font-weight: 700;
+    }
+    .me-round-pill.complete {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+    .me-round-pill.complete.active {
+      background: #22c55e;
+      color: #0b0d10;
+      border-color: #22c55e;
+    }
+    .me-round-pill .progress-count {
+      font-size: 0.7rem;
+      opacity: 0.75;
+      font-weight: 600;
+    }
+
+    .view-nav {
+      display: flex;
+      gap: 0.375rem;
+      margin-bottom: 1.75rem;
+    }
+    .view-nav-pill {
+      padding: 5px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: none;
+      color: var(--fg-dim);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+    }
+    .view-nav-pill:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+    .view-nav-pill.active {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+    }
+
+    .hero-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 640px) {
+      .hero-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+    .hero-card {
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+    }
+    .hero-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .hero-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--fg);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .hero-bar-track {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--line);
+      overflow: hidden;
+    }
+    .hero-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s;
+    }
+
+    .challenge-card {
+      margin-bottom: 1rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--bg-secondary);
+    }
+    .challenge-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 640px) {
+      .challenge-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .skipped-list {
+      margin-top: 1rem;
+      padding: 1rem 1.25rem;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+    }
+  </style>
+
+  <main style="max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem;">
+    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin: 0 0 0.5rem;">Your results</h1>
+    <p style="color: var(--fg-dim); margin: 0 0 1.5rem; font-size: 0.95rem;">How you compare to the judge and the community.</p>
+
+    <div class="view-nav" id="view-nav">
+      <a id="nav-community" class="view-nav-pill" href="/results">Community</a>
+      <span class="view-nav-pill active">You</span>
+    </div>
+
+    <div id="hero-strip" class="hero-strip">
+      <div class="hero-card">
+        <div class="hero-label">Total votes</div>
+        <div class="hero-value" id="hero-votes">—</div>
+        <div class="hero-bar-track">
+          <div class="hero-bar-fill" id="hero-votes-bar" style="background: var(--amber); width: 0%;"></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-label">Judge agreement</div>
+        <div class="hero-value" id="hero-judge">—</div>
+        <div class="hero-bar-track">
+          <div class="hero-bar-fill" id="hero-judge-bar" style="background: #a855f7; width: 0%;"></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-label">Community alignment</div>
+        <div class="hero-value" id="hero-community">—</div>
+        <div class="hero-bar-track">
+          <div class="hero-bar-fill" id="hero-community-bar" style="background: #10b981; width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="round-pills-container" style="margin-bottom: 2rem;">
+      <div class="me-round-selector" id="round-pills">
+        <span style="color: var(--fg-dim); font-size: 0.8rem;">Loading rounds...</span>
+      </div>
+    </div>
+
+    <div id="round-body">
+      <div style="color: var(--fg-dim); font-size: 0.9rem;">Loading...</div>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ initialRoundSlug: roundSlug }}>
+  let currentRoundSlug = initialRoundSlug;
+  let allData = null;
+
+  async function loadAll() {
+    const res = await fetch("/api/data/all");
+    allData = await res.json();
+
+    if (!currentRoundSlug || !allData.rounds.find((r) => r.slug === currentRoundSlug)) {
+      const firstWithProgress = allData.rounds.find(
+        (r) => (allData.progressByRound?.[r.slug] ?? 0) > 0,
+      );
+      currentRoundSlug = firstWithProgress?.slug ?? allData.rounds[0]?.slug ?? "";
+    }
+
+    render();
+  }
+
+  function computeHeroMetrics(data) {
+    const { rounds, challengesByRound, allJudgements, allVariantSides, allStats, userVotes } = data;
+
+    const uvMap = Object.fromEntries(userVotes.map((v) => [v.challengeId, v.choice]));
+    const judgMap = Object.fromEntries(allJudgements.map((j) => [j.challengeId, j]));
+
+    let totalVoted = 0;
+    let judgeMatch = 0;
+    let judgeTotal = 0;
+    let communityAlignSum = 0;
+    let communityAlignCount = 0;
+
+    for (const round of rounds) {
+      const challenges = challengesByRound[round.slug] ?? [];
+      for (const c of challenges) {
+        const myChoice = uvMap[c.id];
+        if (!myChoice) continue;
+        totalVoted++;
+
+        const judg = judgMap[c.id];
+        if (judg) {
+          judgeTotal++;
+          const myIsTie = myChoice === "tie";
+          const judgeIsTie = judg.winner === "tie";
+          if (myIsTie && judgeIsTie) {
+            judgeMatch++;
+          } else if (!myIsTie && !judgeIsTie && judg.winner === myChoice) {
+            judgeMatch++;
+          }
+        }
+
+        const s = allStats[c.id] ?? { left: 0, right: 0, tie: 0, total: 0 };
+        if (s.total > 0) {
+          const agreeCount = s[myChoice] ?? 0;
+          communityAlignSum += agreeCount / s.total;
+          communityAlignCount++;
+        }
+      }
+    }
+
+    const communityAlignPct = communityAlignCount > 0 ? Math.round((communityAlignSum / communityAlignCount) * 100) : null;
+
+    return { totalVoted, judgeMatch, judgeTotal, communityAlignPct };
+  }
+
+  function renderHero(data) {
+    const { totalVoted, judgeMatch, judgeTotal, communityAlignPct } = computeHeroMetrics(data);
+
+    const votesEl = document.getElementById("hero-votes");
+    const votesBar = document.getElementById("hero-votes-bar");
+    if (votesEl) votesEl.textContent = `${totalVoted} / 60`;
+    if (votesBar) votesBar.style.width = `${(totalVoted / 60) * 100}%`;
+
+    const judgeEl = document.getElementById("hero-judge");
+    const judgeBar = document.getElementById("hero-judge-bar");
+    if (judgeEl) judgeEl.textContent = judgeTotal > 0 ? `${judgeMatch} / ${judgeTotal}` : "—";
+    if (judgeBar) judgeBar.style.width = judgeTotal > 0 ? `${(judgeMatch / judgeTotal) * 100}%` : "0%";
+
+    const commEl = document.getElementById("hero-community");
+    const commBar = document.getElementById("hero-community-bar");
+    if (commEl) commEl.textContent = communityAlignPct !== null ? `${communityAlignPct}%` : "—";
+    if (commBar) commBar.style.width = communityAlignPct !== null ? `${communityAlignPct}%` : "0%";
+  }
+
+  function renderPills(data) {
+    const { rounds, progressByRound } = data;
+    const pillsEl = document.getElementById("round-pills");
+    if (!pillsEl) return;
+
+    pillsEl.innerHTML = rounds
+      .map((r) => {
+        const progress = progressByRound?.[r.slug] ?? 0;
+        const isComplete = progress >= 10;
+        const isActive = r.slug === currentRoundSlug;
+        const cls = ["me-round-pill", isActive ? "active" : "", isComplete ? "complete" : ""].filter(Boolean).join(" ");
+        const check = isComplete
+          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+          : "";
+        const counter = progress > 0
+          ? `<span class="progress-count">${isComplete ? "10/10" : `${progress}/10`}</span>`
+          : "";
+        return `<button class="${cls}" data-slug="${r.slug}">${check}<span>${r.name}</span>${counter}</button>`;
+      })
+      .join("");
+
+    for (const btn of pillsEl.querySelectorAll(".me-round-pill")) {
+      btn.addEventListener("click", () => {
+        const slug = btn.dataset.slug;
+        if (slug && slug !== currentRoundSlug) {
+          currentRoundSlug = slug;
+          const url = new URL(window.location.href);
+          url.searchParams.set("round", slug);
+          window.history.pushState({}, "", url.toString());
+          render();
+        }
+      });
+    }
+  }
+
+  function renderRoundBody(data) {
+    const { rounds, challengesByRound, allJudgements, allVariantSides, allStats, userVotes } = data;
+    const bodyEl = document.getElementById("round-body");
+    if (!bodyEl) return;
+
+    const round = rounds.find((r) => r.slug === currentRoundSlug);
+    if (!round) {
+      bodyEl.innerHTML = `<p style="color: var(--fg-dim);">Round not found.</p>`;
+      return;
+    }
+
+    const challenges = challengesByRound[round.slug] ?? [];
+    const progress = data.progressByRound?.[round.slug] ?? 0;
+
+    if (progress === 0) {
+      bodyEl.innerHTML = `
+        <div style="text-align: center; padding: 2.5rem 1rem; border: 1px dashed var(--line); border-radius: 12px;">
+          <p style="color: var(--fg-dim); margin: 0 0 1rem; font-size: 0.95rem;">You haven't voted on this round yet.</p>
+          <a href="/vote?round=${round.slug}" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: var(--fg); color: var(--bg); border-radius: 8px; font-weight: 700; font-size: 0.9rem; text-decoration: none;">Vote ${round.name}</a>
+        </div>
+      `;
+      return;
+    }
+
+    const uvMap = Object.fromEntries(userVotes.map((v) => [v.challengeId, v.choice]));
+    const judgMap = Object.fromEntries(allJudgements.map((j) => [j.challengeId, j]));
+
+    const voted = challenges.filter((c) => uvMap[c.id]);
+    const skipped = challenges.filter((c) => !uvMap[c.id]);
+
+    let aCount = 0;
+    let bCount = 0;
+    let tieCount = 0;
+    for (const c of voted) {
+      const choice = uvMap[c.id];
+      const sides = allVariantSides[c.id];
+      if (!sides) continue;
+      const chosenVariant = choice === "left" ? sides.left : choice === "right" ? sides.right : "tie";
+      if (chosenVariant === "A-with-mcp") aCount++;
+      else if (chosenVariant === "B-without-mcp") bCount++;
+      else tieCount++;
+    }
+
+    const roundSummaryHtml = `
+      <div style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-secondary);">
+        <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 1rem;">Your votes this round</div>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--fg);">${progress}/10</div>
+            <div style="font-size: 0.75rem; color: var(--fg-dim);">votes cast</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b;">${aCount}</div>
+            <div style="font-size: 0.75rem; color: var(--fg-dim);">A (css-bash)</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #0ea5e9;">${bCount}</div>
+            <div style="font-size: 0.75rem; color: var(--fg-dim);">B (vanilla)</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #eab308;">${tieCount}</div>
+            <div style="font-size: 0.75rem; color: var(--fg-dim);">Ties</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const challengeCardsHtml = voted
+      .map((c) => {
+        const myChoice = uvMap[c.id];
+        const sides = allVariantSides[c.id] ?? { left: "", right: "" };
+        const judg = judgMap[c.id];
+        const s = allStats[c.id] ?? { left: 0, right: 0, tie: 0, total: 0 };
+
+        const myVariant =
+          myChoice === "left"
+            ? sides.left
+            : myChoice === "right"
+              ? sides.right
+              : "tie";
+        const myLabel =
+          myChoice === "tie"
+            ? "Tie"
+            : myVariant === "A-with-mcp"
+              ? `${myChoice.toUpperCase()} — A (css-bash)`
+              : `${myChoice.toUpperCase()} — B (vanilla)`;
+        const myColor =
+          myChoice === "tie" ? "#eab308" : myVariant === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
+
+        let judgeHtml = "";
+        let matchBadge = "";
+        if (judg) {
+          const judgeIsTie = judg.winner === "tie";
+          const judgeVariant =
+            judg.winner === "left"
+              ? sides.left
+              : judg.winner === "right"
+                ? sides.right
+                : "tie";
+          const judgeLabel = judgeIsTie
+            ? "Tie"
+            : judgeVariant === "A-with-mcp"
+              ? `${judg.winner.toUpperCase()} — A (css-bash)`
+              : `${judg.winner.toUpperCase()} — B (vanilla)`;
+          const judgeColor = judgeIsTie ? "#eab308" : judgeVariant === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
+
+          const myIsTie = myChoice === "tie";
+          const isMatch = (myIsTie && judgeIsTie) || (!myIsTie && !judgeIsTie && judg.winner === myChoice);
+
+          judgeHtml = `
+            <div style="margin-top: 0.75rem; padding: 0.75rem; border-radius: 8px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.15);">
+              <div style="font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; color: #a855f7; text-transform: uppercase; margin-bottom: 4px;">Judge</div>
+              <div style="font-size: 0.875rem; font-weight: 600; color: ${judgeColor}; margin-bottom: 4px;">${judgeLabel}</div>
+              <div style="font-size: 0.775rem; color: var(--fg-dim); line-height: 1.45;">${judg.verdict}</div>
+            </div>
+          `;
+
+          matchBadge = isMatch
+            ? `<span class="badge" style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25);">✓ Matches judge</span>`
+            : `<span class="badge" style="background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2);">✗ Disagrees</span>`;
+        } else {
+          matchBadge = `<span class="badge" style="background: var(--bg-secondary); color: var(--fg-dim); border: 1px solid var(--line);">— No judgement</span>`;
+        }
+
+        const total = s.total || 1;
+        const myVoteCount = s[myChoice] ?? 0;
+        const communityPct = s.total > 0 ? Math.round((myVoteCount / s.total) * 100) : null;
+        const communityHtml = s.total > 0
+          ? `<div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--fg-dim);">
+               Community: <strong style="color: #10b981;">${communityPct}%</strong> picked the same
+               <span style="opacity: 0.6;">(${myVoteCount} / ${s.total} votes)</span>
+             </div>`
+          : `<div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--fg-dim);">No community votes yet.</div>`;
+
+        return `
+          <div class="challenge-card">
+            <div class="challenge-card-header">
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 4px;">${c.id}</div>
+                <div style="font-size: 1rem; font-weight: 700; color: var(--fg);">${c.title}</div>
+                <div style="font-size: 0.75rem; color: var(--fg-dim); margin-top: 4px;">Expected: <code style="font-family: monospace;">${c.expectedFeature}</code></div>
+              </div>
+              ${matchBadge}
+            </div>
+            <div style="font-size: 0.8rem; margin-bottom: 0.25rem; color: var(--fg-dim);">Your pick:</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: ${myColor};">${myLabel}</div>
+            ${judgeHtml}
+            ${communityHtml}
+          </div>
+        `;
+      })
+      .join("");
+
+    const skippedHtml =
+      skipped.length > 0
+        ? `<div class="skipped-list">
+             <div style="font-size: 0.85rem; color: var(--fg-dim); margin-bottom: 0.75rem;">${skipped.length} challenge${skipped.length > 1 ? "s" : ""} you haven't voted on</div>
+             ${skipped.map((c) => `<div style="font-size: 0.8rem; color: var(--fg-dim); padding: 4px 0; border-top: 1px solid var(--line);">${c.title}</div>`).join("")}
+             <a href="/vote?round=${round.slug}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 0.75rem; padding: 7px 16px; background: var(--fg); color: var(--bg); border-radius: 8px; font-weight: 700; font-size: 0.8rem; text-decoration: none;">Vote them</a>
+           </div>`
+        : "";
+
+    bodyEl.innerHTML = roundSummaryHtml + challengeCardsHtml + skippedHtml;
+  }
+
+  function updateNavLink() {
+    const navEl = document.getElementById("nav-community");
+    if (navEl && currentRoundSlug) {
+      navEl.href = `/results?round=${currentRoundSlug}`;
+    }
+  }
+
+  function render() {
+    if (!allData) return;
+    renderHero(allData);
+    renderPills(allData);
+    renderRoundBody(allData);
+    updateNavLink();
+  }
+
+  window.addEventListener("popstate", () => {
+    currentRoundSlug = new URLSearchParams(window.location.search).get("round") ?? "";
+    render();
+  });
+
+  loadAll();
+</script>

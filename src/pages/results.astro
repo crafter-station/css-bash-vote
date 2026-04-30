@@ -10,6 +10,35 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
   <Header isSignedIn={!!userId} />
 
   <style is:global>
+    .view-nav {
+      display: flex;
+      gap: 0.375rem;
+      margin-bottom: 1.75rem;
+    }
+    .view-nav-pill {
+      padding: 5px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: none;
+      color: var(--fg-dim);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+    }
+    .view-nav-pill:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+    .view-nav-pill.active {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+    }
+
     .results-round-selector {
       display: flex;
       gap: 0.5rem;
@@ -129,6 +158,13 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin: 0 0 0.5rem;">Community results</h1>
     <p style="color: var(--fg-dim); margin: 0 0 1.5rem; font-size: 0.95rem;">Aggregated votes from Crafter Station members. Variant A = with css-bash MCP. Variant B = without MCP.</p>
 
+    <div class="view-nav">
+      <span class="view-nav-pill active">Community</span>
+      {userId && (
+        <a id="nav-you" class="view-nav-pill" href="/results/me">You</a>
+      )}
+    </div>
+
     <div id="round-selector-container" style="margin-bottom: 2rem;">
       <div class="results-round-selector" id="round-pills">
         <span style="color: var(--fg-dim); font-size: 0.8rem;">Loading rounds...</span>
@@ -176,7 +212,15 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     appData = await dataRes.json();
     statsData = await statsRes.json();
     currentRoundSlug = appData.round?.slug ?? slug ?? "";
+    updateNavYouLink();
     render();
+  }
+
+  function updateNavYouLink() {
+    const navYou = document.getElementById("nav-you");
+    if (navYou && currentRoundSlug) {
+      navYou.href = `/results/me?round=${currentRoundSlug}`;
+    }
   }
 
   function render() {

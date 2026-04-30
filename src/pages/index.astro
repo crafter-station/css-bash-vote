@@ -108,43 +108,75 @@ const isFullyDone = totalVoted >= 60;
         <div class="flex flex-wrap justify-center gap-3">
           {isSignedIn ? (
             isFullyDone ? (
-              <a
-                href="/results"
-                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
-              >
-                See your results
-              </a>
+              <>
+                <a
+                  href="/results/me"
+                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
+                >
+                  See your results
+                </a>
+                <a
+                  href="/results"
+                  class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
+                >
+                  See community results
+                </a>
+              </>
             ) : hasProgress && resumeSlug ? (
-              <a
-                href={`/vote?round=${resumeSlug}`}
-                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
-              >
-                Continue: {resumeRoundName}
-              </a>
+              <>
+                <a
+                  href={`/vote?round=${resumeSlug}`}
+                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
+                >
+                  Continue: {resumeRoundName}
+                </a>
+                <a
+                  href="/results/me"
+                  class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
+                >
+                  See your results
+                </a>
+                <a
+                  href="/results"
+                  class="inline-flex items-center text-sm font-medium text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors px-2 py-2.5"
+                >
+                  See community results
+                </a>
+              </>
             ) : (
-              <a
-                href="/vote"
-                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
-              >
-                Start voting
-              </a>
+              <>
+                <a
+                  href="/vote"
+                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] no-underline hover:opacity-90 transition-opacity"
+                >
+                  Start voting
+                </a>
+                <a
+                  href="/results"
+                  class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
+                >
+                  See community results
+                </a>
+              </>
             )
           ) : (
-            <SignInButton mode="modal" forceRedirectUrl="/vote" signUpForceRedirectUrl="/vote" asChild>
-              <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] hover:opacity-90 transition-opacity"
+            <>
+              <SignInButton mode="modal" forceRedirectUrl="/vote" signUpForceRedirectUrl="/vote" asChild>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--fg)] px-6 py-2.5 text-sm font-bold text-[var(--bg)] tracking-[-0.01em] hover:opacity-90 transition-opacity"
+                >
+                  Sign in to vote
+                </button>
+              </SignInButton>
+              <a
+                href="/results"
+                class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
               >
-                Sign in to vote
-              </button>
-            </SignInButton>
+                See community results
+              </a>
+            </>
           )}
-          <a
-            href="/results"
-            class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
-          >
-            See results
-          </a>
         </div>
 
         <div class="flex w-full max-w-[640px] flex-wrap items-baseline justify-center gap-x-6 gap-y-2 text-[var(--fg-dim)] text-sm">
