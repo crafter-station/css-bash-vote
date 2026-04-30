@@ -76,14 +76,47 @@ Output a single self-contained HTML file with inline <style> and minimal <script
     title: "Drop cap with initial-letter",
     expectedFeature: "initial-letter",
     expectedKeywords: ["initial-letter"],
-    prompt: `Build a self-contained HTML file with a long-form article section (3 paragraphs). The very first letter of the first paragraph must be a three-line drop cap — large, typographically raised, with surrounding text wrapping around it naturally. CRITICAL constraints: (1) initial-letter: 3 must be the mechanism — no manual font-size + float + negative margin hack. (2) The drop cap must be styled differently from body text (different color and/or font weight). (3) No JavaScript. The drop cap must not affect subsequent paragraphs. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a long-form editorial that combines initial-letter, ::first-line styling, and CSS columns: 2 — and stress-tests all three working together.
+
+Layout: a 700px-wide article split into two columns via columns: 2. The article has four paragraphs of 80+ words each. Requirements:
+
+- The very first letter of the entire article must be a 3-line drop cap using initial-letter: 3. It must float correctly inside the first column, with column-spanning text wrapping around it. The drop cap must render in oklch(0.45 0.22 30) (a warm rust) with font-weight: 700.
+- The ::first-line of EVERY paragraph (including the one containing the drop cap) must render in small-caps via font-variant-caps: small-caps and a slightly muted hue.
+- Both columns must be on-screen simultaneously — no column breaks should split a paragraph mid-sentence.
+- A "Magnify" button exists below the article. When it receives :focus-visible, the article must gain a :focus-within state that transitions the initial-letter from 3 lines to 5 lines using interpolate-size: allow-keywords and a CSS transition on the initial-letter property — no layout jump.
+
+CRITICAL constraints:
+1. initial-letter: 3 (growing to 5 on :focus-within) must be the drop cap mechanism — no float + font-size hack.
+2. ::first-line must drive small-caps — no <span> wrappers.
+3. columns: 2 must split the article — no flexbox or grid multi-column trick.
+4. interpolate-size: allow-keywords must enable the initial-letter size transition — no JS.
+5. No JavaScript at all.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
   {
     id: "05-04-text-box-trim",
     title: "Optical alignment with text-box-trim",
     expectedFeature: "text-box-trim",
     expectedKeywords: ["text-box-trim", "text-box-edge"],
-    prompt: `Build a self-contained HTML file with a button row where each button contains both an icon (inline SVG) and a text label. The text and icon must be perfectly optically centered — no top/bottom spacing differences caused by line-height or descenders. CRITICAL constraints: (1) text-box-trim: trim-both with text-box-edge: cap alphabetic must be used on the button text to eliminate leading/trailing whitespace from the text box. (2) No negative margin hacks or transform: translateY adjustments. (3) The alignment must be demonstrably better than the default: show the buttons in a "default" row and a "trimmed" row for comparison. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a button size system that combines text-box-trim + text-box-edge with @container queries — demonstrating that optical centering holds across every container size with zero hardcoded padding adjustments.
+
+Create a single button component used in three container contexts: sm (240px), md (480px), lg (720px). The button auto-sizes its padding and font-size via @container queries using cqi units. In every size, the icon (inline SVG, 1em square) and text label must be optically centered — no descender gap below, no leading gap above.
+
+Show each size as a side-by-side pair: "Default (no trim)" vs "Trimmed" — six buttons total. The Default column must visibly show the gap above/below text caused by line-height. The Trimmed column must eliminate it.
+
+Text-box configuration: text-box-trim: trim-both; text-box-edge: cap alphabetic on the button label span.
+
+Additionally: a fourth "Error state" row shows a button with a red border and error icon. The text-box-trim must hold in the error state — confirm by showing it alongside the normal button at md size.
+
+CRITICAL constraints:
+1. text-box-trim: trim-both and text-box-edge: cap alphabetic must be the centering mechanism — no transform: translateY, no negative margin, no line-height: 1 hack.
+2. @container queries with cqi units must control button padding and font-size across sm/md/lg — no @media breakpoints for component sizing.
+3. container-type: inline-size must wrap each context column.
+4. The before/after comparison must be visually unambiguous — both columns must be on screen simultaneously.
+5. No JavaScript.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
   {
     id: "05-05-first-line-styled",
@@ -120,7 +153,28 @@ Output a single self-contained HTML file with inline <style>. No external resour
     title: "Recolor emoji font via font-palette",
     expectedFeature: "font-palette",
     expectedKeywords: ["font-palette", "@font-palette-values"],
-    prompt: `Build a self-contained HTML file displaying six large emoji (🎉🔥🌈🚀💎🎯) with a custom color palette applied — the emoji must render in a duotone purple-and-gold palette rather than their default colors. CRITICAL constraints: (1) @font-palette-values must define the custom palette with override-colors. (2) font-palette must reference the defined palette on the element. (3) No SVG or canvas fallback — this must use the CSS font-palette system. Note: this feature requires a color font (COLRv1/v0); use the system emoji font by referencing it explicitly if needed. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a color-font animation showcase that combines @font-palette-values, @property-registered color variables, and a morphing palette animation — with a prefers-reduced-motion freeze guard.
+
+Display six large emoji (at least 96px each): 🎉🔥🌈🚀💎🎯. Define a custom palette using @font-palette-values that overrides the emoji's default colors with two registered @property variables: --palette-primary (syntax: '<color>', initial: oklch(0.55 0.22 280)) and --palette-accent (syntax: '<color>', initial: oklch(0.75 0.18 55)). Wire the palette's override-colors to these registered properties.
+
+Animate both properties together over 8s ease-in-out alternate infinite:
+- --palette-primary: oklch(0.55 0.22 280) → oklch(0.45 0.25 15) (purple → crimson).
+- --palette-accent: oklch(0.75 0.18 55) → oklch(0.85 0.2 95) (gold → lime).
+
+The emoji colors must visibly morph through the full spectrum as the keyframes run — snapping would reveal unregistered variable usage.
+
+A second static row shows the same emoji at their default system palette for contrast.
+
+@media (prefers-reduced-motion: reduce) must freeze both animations at their initial-value state — use animation-play-state: paused, not animation: none.
+
+CRITICAL constraints:
+1. @font-palette-values with override-colors must be the palette mechanism — no SVG or canvas fallback.
+2. @property with syntax: '<color>' must register both palette variables — unregistered vars cannot interpolate colors in @font-palette-values.
+3. The animation must be driven by @keyframes on the registered properties — not filter or hue-rotate.
+4. prefers-reduced-motion must freeze (paused), not remove, the animation.
+5. No JavaScript.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
   {
     id: "05-07-highlight-pseudo",
@@ -220,6 +274,21 @@ Output a single self-contained HTML file with inline <style> and minimal <script
     title: "Optical margin alignment with hanging-punctuation",
     expectedFeature: "hanging-punctuation",
     expectedKeywords: ["hanging-punctuation"],
-    prompt: `Build a self-contained HTML file with a pull-quote section containing three blockquotes, each starting with an opening quotation mark. The opening quote marks must hang into the left margin so the first letter of the text aligns with the body column — not indented by the quote mark's width. CRITICAL constraints: (1) hanging-punctuation: first must be the mechanism — no negative text-indent hack. (2) No JavaScript. (3) The hanging effect must be visible: show one blockquote WITHOUT hanging-punctuation and one WITH it side by side for contrast. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a typographic showcase that combines hanging-punctuation: first, text-wrap: pretty, and initial-letter: 2 on the opening paragraph — with a container query that disables hanging-punctuation on narrow containers.
+
+Layout: a two-column editorial page. Left column (450px): three blockquotes, each starting with a curly opening quote mark (“). Right column (350px): the same three blockquotes. On the left column, hanging-punctuation: first must push the quote mark into the left margin so the first word letter aligns with the body text. On the right column, hanging-punctuation is off — showing the misaligned default for direct contrast.
+
+Above both columns: a single intro paragraph with initial-letter: 2 on its first character (2-line drop cap, oklch(0.5 0.2 250) blue, font-weight: 700). The entire article uses text-wrap: pretty so no orphaned single words appear on the last line of any paragraph.
+
+A @container query on each column: when its inline-size drops below 480px, hanging-punctuation must switch off automatically — the small viewport cannot accommodate the visual gap. This must be driven by container-type: inline-size on the column wrapper, not @media.
+
+CRITICAL constraints:
+1. hanging-punctuation: first must be the sole margin-alignment mechanism — no negative text-indent, no padding-left adjustment.
+2. text-wrap: pretty must prevent orphans — no <br> or soft hyphens.
+3. initial-letter: 2 must handle the drop cap — no float + font-size hack.
+4. The @container query must disable hanging-punctuation below 480px inline-size — not @media.
+5. No JavaScript.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
 ];

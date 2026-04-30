@@ -105,7 +105,23 @@ Output a single self-contained HTML file with inline <style> and minimal <script
     title: "Layout adapts to display-mode (standalone)",
     expectedFeature: "display-mode",
     expectedKeywords: ["display-mode", "standalone"],
-    prompt: `Build a self-contained HTML file with an app shell (top nav, content area, bottom tab bar). In browser mode the top nav must show the full URL bar placeholder and the bottom tab bar must be hidden. In standalone PWA mode (@media (display-mode: standalone)) the top nav must shrink to just a title, and the bottom tab bar must appear. CRITICAL constraints: (1) @media (display-mode: standalone) must control the layout switch — no JavaScript navigator.standalone check. (2) The page must visually demonstrate both states simultaneously: include a toggle button that adds a class simulating standalone mode so both layouts are visible in the same browser session. (3) No external resources.`,
+    prompt: `Build a PWA-aware app shell that combines @media (display-mode: standalone), viewport-fit: cover with env(safe-area-inset-*), and @container queries — and must demonstrate both installed and browser states simultaneously without a real PWA install.
+
+App shell structure: top nav bar, scrollable content area (4 article cards), bottom tab bar (4 icon+label tabs). Browser mode: top nav is full-height (64px) with a URL bar placeholder row; bottom tab bar is hidden. Standalone mode: top nav shrinks to 48px (title only); bottom tab bar appears with height 56px + env(safe-area-inset-bottom) padding to handle notch devices.
+
+A "Simulate standalone" class toggle button at the very top of the page lets the judge switch the entire shell without a real install — the class must activate all standalone styles identically to what @media (display-mode: standalone) would produce.
+
+The four article cards inside the content area use a @container query: when the content area is narrower than 500px (container-type: inline-size), cards stack vertically; wider, they show a 2-column grid.
+
+CRITICAL constraints:
+1. @media (display-mode: standalone) must control the real layout switch — no JavaScript navigator.standalone check for actual PWA behavior.
+2. The simulated standalone class must exactly mirror the @media styles — write shared rules in a way that avoids duplication (use :is() or a data attribute the @media also targets).
+3. env(safe-area-inset-bottom) must pad the bottom tab bar in standalone mode — even in simulation, show the calculation with a visible colored bar representing the inset area.
+4. @container query (not @media) must drive the card layout switch inside the content area.
+5. viewport-fit: cover must be present in the <meta name='viewport'> tag.
+6. No JavaScript beyond the class toggle.
+
+Output a single self-contained HTML file with inline <style> and minimal <script> for the toggle only. No external resources.`,
   },
   {
     id: "06-08-prefers-reduced-motion",
@@ -178,6 +194,23 @@ Output a single self-contained HTML file with inline <style>. No external resour
     title: "Wide-gamut color with @media (color-gamut)",
     expectedFeature: "color-gamut",
     expectedKeywords: ["color-gamut", "p3"],
-    prompt: `Build a self-contained HTML file with two gradient swatches side by side: one labeled "sRGB" using standard hex colors, one labeled "P3 wide-gamut" using more vivid equivalents. On displays that support Display P3 (most modern MacBooks and iPhones), the P3 swatch must appear noticeably more vivid. On sRGB-only displays, both must look similar. CRITICAL constraints: (1) @media (color-gamut: p3) must conditionally apply the P3 color values using color(display-p3 ...) syntax. (2) The sRGB swatch must use a standard oklch or hex gradient as the base. (3) No JavaScript. Include a label on each swatch showing which gamut is active. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a three-column color gamut laboratory that combines @media (color-gamut: p3), @media (dynamic-range: high), and relative-color-syntax to derive P3 and HDR colors from a single sRGB seed — and labels each column with its active media query status.
+
+Three columns, same width, labeled "sRGB", "P3", "HDR":
+
+- Column 1 (sRGB, always active): a gradient using oklch(0.55 0.22 250) → oklch(0.65 0.18 30). This is the seed. Below it: the text "Baseline — always active".
+- Column 2 (P3, conditional): inside @media (color-gamut: p3), derive the P3 equivalents using color(display-p3 from oklch(0.55 0.22 250) r g b) relative-color-syntax. The gradient must visibly saturate beyond the sRGB column on a P3 display. On sRGB monitors both look similar. Label changes to "P3 active" vs "P3 not detected".
+- Column 3 (HDR, conditional): inside @media (dynamic-range: high), derive further-boosted values using color(display-p3 from oklch(0.55 0.22 250) calc(r * 1.1) g b) relative-color-syntax. Label: "HDR active" vs "HDR not detected".
+
+Each column label must update automatically via CSS content on ::after pseudo-elements that change based on which @media rules are active — no JavaScript reading matchMedia.
+
+CRITICAL constraints:
+1. @media (color-gamut: p3) must gate Column 2's colors — not a static color(display-p3 ...) value.
+2. @media (dynamic-range: high) must gate Column 3 independently — not combined with gamut query.
+3. Relative-color-syntax must derive P3/HDR values from the sRGB seed variable — no separate hardcoded display-p3 values.
+4. Column labels must reflect media query status via CSS only — no JavaScript matchMedia.
+5. No JavaScript.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
 ];

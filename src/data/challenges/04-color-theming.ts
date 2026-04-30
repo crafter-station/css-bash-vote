@@ -75,7 +75,25 @@ Output a single self-contained HTML file with inline <style> and minimal <script
     title: "Typed color animation via @property",
     expectedFeature: "registered-custom-properties",
     expectedKeywords: ["@property", "syntax:", "initial-value:"],
-    prompt: `Build a self-contained HTML file with a notification badge that continuously animates its background color through a warm-to-cool spectrum: from amber (#f59e0b) through coral (#f97316) to indigo (#6366f1) and back, looping forever. CRITICAL constraints: (1) The background color must be stored in a @property-registered custom property with syntax: "<color>" so the browser interpolates through intermediate colors in each keyframe step. (2) A plain CSS variable must NOT be used — it would snap between values. (3) The animation must loop infinitely with no JavaScript. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a theming badge system that combines @property typed-color animation, relative-color-syntax for palette derivation, and @container style queries for theme-driven color loops.
+
+Three parent containers are each given a different --theme custom property value (--theme: 'warm', --theme: 'cool', --theme: 'neon'). Inside each container sits a notification badge. The same @keyframes animation drives all three badges, but each must cycle through a completely different color range depending on which --theme the parent declares.
+
+Use @container style(--theme: 'warm') / style(--theme: 'cool') / style(--theme: 'neon') on the badge to assign a @property-registered --badge-color a different start/end pair per theme:
+- warm: animates amber (#f59e0b) → coral (#f97316) → rose (#f43f5e), 6s loop.
+- cool: animates cyan (#06b6d4) → indigo (#6366f1) → violet (#8b5cf6), 6s loop.
+- neon: animates lime (#84cc16) → emerald (#10b981) → teal (#14b8a6), 6s loop.
+
+On each badge, derive a text-glow shadow color using oklch(from var(--badge-color) calc(l + 0.2) c h) relative-color-syntax — it must track the animated value in real time.
+
+CRITICAL constraints:
+1. @property with syntax: '<color>' must be used — unregistered vars snap between color keyframes.
+2. @container style() queries must assign the animation range per theme — no per-theme class on badges.
+3. Relative-color-syntax must derive the glow from var(--badge-color) — no separate hardcoded glow color.
+4. The animation must run infinitely with no JavaScript.
+5. Three simultaneous themes must be visible on one page.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
   {
     id: "04-05-oklch-gradient",
@@ -226,6 +244,23 @@ Output a single self-contained HTML file with inline <style>. No external resour
     title: "HWB color space for tinting",
     expectedFeature: "hwb-color",
     expectedKeywords: ["hwb("],
-    prompt: `Build a self-contained HTML file with a row of seven swatches showing a single hue (200°, a sky blue) progressively tinted from pure (0% white, 0% black) through increasing whiteness (5 steps to 100% white). A second row shows the same hue going through increasing blackness. CRITICAL constraints: (1) hwb() color function must be used — it directly accepts hue, whiteness, blackness making the progression trivial. (2) No color-mix() or relative color syntax for this challenge — the point is hwb's intuitive tinting model. (3) No JavaScript. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a color exploration card set that combines three modern primitives: hwb() as the base color model, color-mix(in oklch) to generate a 7-step tint progression, and relative-color-syntax for a hover hue-shift effect.
+
+The card shows a single seed declared as --base: hwb(200 0% 0%) (vivid sky blue). Derive:
+- 7 tint swatches using color-mix(in oklch, var(--base) N%, white) at 0%, 15%, 30%, 45%, 60%, 75%, 90%.
+- 7 shade swatches using color-mix(in oklch, var(--base) N%, black) at the same steps.
+- On hover of any swatch, shift the hue +30deg using oklch(from var(--base) l c calc(h + 30)) relative-color-syntax — no additional custom property required.
+- A @media (prefers-color-scheme: dark) block must invert the background surface using light-dark() on the page — the swatches must remain correctly vivid in both schemes.
+
+Label each swatch with its mix percentage. A legend above shows which three APIs generated each row.
+
+CRITICAL constraints:
+1. hwb() must define --base — no hex or oklch seed.
+2. color-mix(in oklch) must generate every tint and shade — no hardcoded derived hex values.
+3. The hover hue-shift must use oklch(from var(--base) ...) relative-color-syntax — no separate --hover-color variable.
+4. prefers-color-scheme adaptation must use light-dark() — no duplicate @media block for colors.
+5. No JavaScript.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
 ];

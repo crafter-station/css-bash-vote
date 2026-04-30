@@ -110,7 +110,24 @@ Output a single self-contained HTML file with inline <style> and minimal <script
     title: "Layered animations via animation-composition",
     expectedFeature: "animation-composition",
     expectedKeywords: ["animation-composition", "add"],
-    prompt: `Build a self-contained HTML file with a circle that has two simultaneous CSS animations: (1) a continuous slow rotation, and (2) a hover-triggered scale-up from 1 to 1.5. Both animations must play at the same time when hovered, and the scale must compound on top of the rotation rather than replacing it. CRITICAL constraints: (1) animation-composition: add must be used on at least the hover animation so transforms accumulate rather than override. (2) No JavaScript may be used to merge or combine transforms manually. (3) Both animations must remain active simultaneously during hover. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a layered animation card that combines animation-composition: add, a scroll-driven scale via view-timeline, and a hover-driven hue-rotate transition — all three compositing on the same element simultaneously without any layer overriding another.
+
+The element: a 200px square card with an abstract gradient (oklch 270deg → 30deg). Three animation layers:
+
+1. Continuous base rotation: a @keyframes spin (0deg → 360deg) running at 8s linear infinite, always active.
+2. Scroll-driven scale: a @keyframes grow (scale(1) → scale(1.4)) on animation-timeline: view() with animation-range: entry 20% cover 60%. As the card enters the viewport it grows. animation-composition: add must stack this on top of the rotation.
+3. Hover hue-rotate: a CSS transition on filter: hue-rotate() from 0deg to 120deg on :hover (duration 400ms ease-out cubic-bezier(0.25, 0.1, 0.25, 1)). Must compose with the other two layers — hovering mid-scroll must combine all three effects visually.
+
+@media (prefers-reduced-motion: reduce) must freeze only the scroll-driven layer (animation-play-state: paused on the view-timeline animation) — the rotation and hover transition must remain active, just without the scroll-linked scale.
+
+CRITICAL constraints:
+1. animation-composition: add must appear on both the scroll-driven and hover animations — replace is the wrong value.
+2. All three effects must compose visually when triggered together — not snap or override.
+3. animation-timeline: view() must drive the scale — no JS IntersectionObserver or scroll listener.
+4. prefers-reduced-motion must pause only the scroll-driven layer, not all animations.
+5. No JavaScript.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
   {
     id: "02-06-animation-range-scrub",
@@ -151,10 +168,28 @@ Output a single self-contained HTML file with inline <style> and minimal <script
   },
   {
     id: "02-08-property-color-animation",
-    title: "Animatable color via @property",
+    title: "Color tween via @property + @starting-style + view-transitions",
     expectedFeature: "registered-custom-properties",
-    expectedKeywords: ["@property", "syntax:", "initial-value:"],
-    prompt: `Build a self-contained HTML file with a button "Pulse". On hover or click, the button background must continuously pulse between a muted slate (#475569) and a vivid indigo (#6366f1), smoothly cycling through all intermediate color values — never snapping. CRITICAL constraints: (1) The color must be stored in a @property-registered custom property with syntax: "<color>" so the browser can interpolate it. (2) A regular unregistered CSS variable must NOT be used for the animated value — it would snap. (3) The animation must use @keyframes referencing the registered property, not a filter or opacity trick. The HTML file must be self-contained with inline <style>. No external resources.`,
+    expectedKeywords: ["@property", "syntax:", "initial-value:", "@starting-style", "startViewTransition"],
+    prompt: `Build a button that triggers a view-transition on click, where the new state's background color animates from its @property initial-value into the target color — interpolation is only possible because @property registers the type.
+
+Single button labeled "Activate". It has two states: inactive (background: --btn-color at oklch(0.45 0.05 250), a muted slate) and active (--btn-color at oklch(0.55 0.22 270), vivid indigo). Clicking toggles the active class via document.startViewTransition.
+
+@property registration:
+- --btn-color: syntax '<color>', inherits: false, initial-value: oklch(0.45 0.05 250).
+
+Inside ::view-transition-new, an @starting-style block sets --btn-color to its initial-value so the browser can tween from muted → vivid as the new state enters. The transition duration must be 600ms ease-in-out. Without @property + @starting-style, the color would snap.
+
+Additionally: the button text must change from "Activate" to "Deactivate" via content in the ::view-transition-new pseudo-element — demonstrating that view-transition captures the layout state, not just the background.
+
+CRITICAL constraints:
+1. @property with syntax: '<color>' and initial-value must register --btn-color — unregistered vars cannot interpolate across view-transitions.
+2. @starting-style inside ::view-transition-new must set the from-color — no JS sets inline styles or runs setTimeout to stage the animation.
+3. document.startViewTransition is the only JS allowed — the entire color animation must be CSS-driven.
+4. The transition must be visibly smooth through intermediate oklch colors — not a cross-fade snap.
+5. No animation libraries, no Web Animations API.
+
+Output a single self-contained HTML file with inline <style> and minimal <script> for startViewTransition only. No external resources.`,
   },
   {
     id: "02-09-scroll-snap-carousel",

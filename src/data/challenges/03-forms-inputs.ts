@@ -65,7 +65,22 @@ Output a single self-contained HTML file with inline <style>. No external resour
     title: "Submit enables when form is complete via :has()",
     expectedFeature: "has",
     expectedKeywords: [":has(", ":invalid", ":valid"],
-    prompt: `Build a self-contained HTML file with a contact form: name (required text), email (required email type), message (required textarea). The submit button must be visually disabled (gray, cursor: not-allowed) when any field is invalid or empty. It must become enabled (vivid green, clickable) only when ALL fields are valid simultaneously. CRITICAL constraints: (1) No JavaScript. (2) The submit button state must be controlled by a :has() selector on the form that checks for :invalid descendants. (3) The button must use CSS pointer-events and opacity to signal its state — not the disabled HTML attribute alone. The HTML file must be self-contained with inline <style>. No external resources.`,
+    prompt: `Build a contact form that uses :user-valid and :user-invalid (not :valid/:invalid) for per-field feedback, with an inline error summary that grows from height: 0 to height: auto using interpolate-size — and a CSS counter that tracks how many fields are currently invalid.
+
+Form fields: name (required, minlength=2), email (required, type=email), message (required, minlength=20 textarea). Below the textarea: an error summary div that is display: none while all fields are untouched or valid, and animates open (height: 0 → height: auto, opacity: 0 → 1, 300ms ease-out) when any field becomes :user-invalid after interaction.
+
+Inside the error summary: a CSS counter (counter-name: invalid-count) increments by 1 for each :user-invalid field via ::before pseudo-elements on each field wrapper. The summary header reads 'Fix N issues:' where N is the counter value — rendered via content: counter(invalid-count) in a ::before on the summary.
+
+Submit button: visually disabled (gray, pointer-events: none, opacity: 0.5, cursor: not-allowed) while the form :has(:user-invalid) or :has(:placeholder-shown). Becomes vivid indigo (oklch(0.55 0.22 270)) and clickable only when form :has(:user-valid:user-valid:user-valid) — all three simultaneously valid.
+
+CRITICAL constraints:
+1. :user-invalid and :user-valid must drive all per-field feedback — :invalid/:valid must not be used (they fire on untouched fields).
+2. interpolate-size: allow-keywords must enable height: auto animation on the error summary — no max-height cap.
+3. CSS counter on the form must count :user-invalid fields — no JavaScript counting.
+4. :has() on the form must gate the submit button — no JS validity checks.
+5. No JavaScript at all.
+
+Output a single self-contained HTML file with inline <style>. No external resources.`,
   },
   {
     id: "03-04-accent-color-theme",
@@ -217,6 +232,27 @@ Output a single self-contained HTML file with inline <style>. No external resour
     title: "Dialog with inert background via <dialog>",
     expectedFeature: "dialog-inert",
     expectedKeywords: ["<dialog", "showModal", "inert"],
-    prompt: `Build a self-contained HTML file with page content (several inputs and links) and a button "Open dialog". Clicking the button opens a modal dialog. While the dialog is open, all content behind it must be inert — keyboard Tab must not reach background elements, and clicking background elements must do nothing. CRITICAL constraints: (1) The native <dialog> element with showModal() must be used — this automatically makes background content inert via the browser's top-layer behavior. (2) Do NOT manually add the inert attribute to the page body. (3) A close button inside the dialog must call dialog.close(). The HTML file must be self-contained with inline <style> and minimal <script> for open/close only. No external resources.`,
+    prompt: `Build a modal dialog that uses native <dialog> with showModal(), @starting-style for the entry animation, transition-behavior: allow-discrete on display + overlay, and an animated ::backdrop — all without JavaScript controlling animation timing.
+
+Page content: three text inputs, four navigation links, and a paragraph. An "Open dialog" button triggers the dialog. The dialog contains a form (name input, message textarea, submit and cancel buttons).
+
+Entry animation (dialog opening):
+- Dialog starts at @starting-style { opacity: 0; transform: scale(0.9) translateY(16px); } and transitions to opacity: 1; transform: none over 350ms cubic-bezier(0.34, 1.56, 0.64, 1).
+- ::backdrop starts at @starting-style { background: transparent; } and transitions to background: oklch(0.1 0 0 / 0.6) over 300ms ease-out.
+
+Exit animation (dialog closing):
+- transition-behavior: allow-discrete must be set on both the dialog element (for display and overlay) and the ::backdrop — so both visually animate out before collapsing from the top layer.
+- The dialog reverses to opacity: 0; transform: scale(0.95) translateY(8px) before disappearing.
+
+Background elements must be inert while the dialog is open — use :has(:modal) to verify via CSS (add an outline to body when :has(dialog:modal) matches).
+
+CRITICAL constraints:
+1. @starting-style must define pre-entry state for both dialog and ::backdrop — no JS class added via setTimeout.
+2. transition-behavior: allow-discrete must appear on display and overlay properties — these are discrete properties that require it.
+3. showModal() / dialog.close() are the only JS calls allowed — no animation classes, no inline styles.
+4. The exit animation must visually complete before layout collapses — confirm by watching the backdrop fade, not snapping.
+5. No animation libraries, no Web Animations API.
+
+Output a single self-contained HTML file with inline <style> and minimal <script> for showModal/close only. No external resources.`,
   },
 ];
