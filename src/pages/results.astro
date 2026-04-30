@@ -156,13 +156,18 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
 
   <main style="max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem;">
     <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin: 0 0 0.5rem;">Community results</h1>
-    <p style="color: var(--fg-dim); margin: 0 0 1.5rem; font-size: 0.95rem;">Aggregated votes from Crafter Station members. Variant A = with css-bash MCP. Variant B = without MCP.</p>
+    <p style="color: var(--fg-dim); margin: 0 0 1.5rem; font-size: 0.95rem;">Aggregated votes from Crafter Station members. Variant A = css-bash (with MCP). Variant B = vanilla (without MCP).</p>
 
     <div class="view-nav">
       <span class="view-nav-pill active">Community</span>
       {userId && (
         <a id="nav-you" class="view-nav-pill" href="/results/me">You</a>
       )}
+    </div>
+
+    <div id="global-aggregate" style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-secondary);">
+      <div style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--fg-dim); text-transform: uppercase; margin-bottom: 1rem;">Global preference</div>
+      <div id="global-aggregate-content" style="color: var(--fg-dim); font-size: 0.9rem;">Loading...</div>
     </div>
 
     <div id="round-selector-container" style="margin-bottom: 2rem;">
@@ -179,6 +184,8 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     ></div>
 
     <div id="locked-cta" class="locked-cta" style="display: none;"></div>
+
+    <div id="round-mini-aggregate" style="margin-bottom: 1rem; font-size: 0.85rem; color: var(--fg-dim);"></div>
 
     <div id="locked-wrapper">
       <div id="scoreboard" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-secondary);">
@@ -202,6 +209,13 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
   let currentRoundSlug = initialRoundSlug;
   let appData = null;
   let statsData = null;
+  let globalData = null;
+
+  async function loadGlobal() {
+    const res = await fetch("/api/data/all");
+    globalData = await res.json();
+    renderGlobalAggregate();
+  }
 
   async function loadAll(slug) {
     const qs = slug ? `?round=${slug}` : "";
@@ -223,6 +237,94 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     }
   }
 
+  function renderGlobalAggregate() {
+    const el = document.getElementById("global-aggregate-content");
+    if (!el || !globalData) return;
+
+    const { allStats, allVariantSides } = globalData;
+    if (!allStats || !allVariantSides) {
+      el.textContent = "No data.";
+      return;
+    }
+
+    let totalA = 0;
+    let totalB = 0;
+    let totalTie = 0;
+    let aWins = 0;
+    let bWins = 0;
+    let globalTies = 0;
+
+    for (const [challengeId, s] of Object.entries(allStats)) {
+      const sides = allVariantSides[challengeId];
+      if (!sides) continue;
+
+      const aVotes =
+        (sides.left === "A-with-mcp" ? (s.left || 0) : 0) +
+        (sides.right === "A-with-mcp" ? (s.right || 0) : 0);
+      const bVotes =
+        (sides.left === "B-without-mcp" ? (s.left || 0) : 0) +
+        (sides.right === "B-without-mcp" ? (s.right || 0) : 0);
+      const tieVotes = s.tie || 0;
+
+      totalA += aVotes;
+      totalB += bVotes;
+      totalTie += tieVotes;
+
+      if (aVotes > bVotes) aWins++;
+      else if (bVotes > aVotes) bWins++;
+      else globalTies++;
+    }
+
+    const grandTotal = totalA + totalB + totalTie || 1;
+    const aPct = Math.round((totalA / grandTotal) * 100);
+    const bPct = Math.round((totalB / grandTotal) * 100);
+    const tiePct = Math.round((totalTie / grandTotal) * 100);
+    const totalVotesAll = totalA + totalB + totalTie;
+
+    el.innerHTML = `
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+          <span style="font-size: 2rem; font-weight: 800; color: #f59e0b;">${aPct}%</span>
+          <span style="font-size: 0.85rem; color: #f59e0b; font-weight: 600;">${totalA} votes</span>
+          <span style="font-size: 0.8rem; color: var(--fg-dim); margin-left: 0.25rem;">css-bash</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 0.5rem; flex-direction: column; align-items: center;">
+          <span style="font-size: 1rem; font-weight: 700; color: #eab308;">${tiePct}%</span>
+          <span style="font-size: 0.75rem; color: var(--fg-dim);">tie · ${totalTie}</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 0.5rem; flex-direction: row-reverse;">
+          <span style="font-size: 0.8rem; color: var(--fg-dim); margin-right: 0.25rem;">vanilla</span>
+          <span style="font-size: 0.85rem; color: #0ea5e9; font-weight: 600;">${totalB} votes</span>
+          <span style="font-size: 2rem; font-weight: 800; color: #0ea5e9;">${bPct}%</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 4px; height: 36px; border-radius: 8px; overflow: hidden; margin-bottom: 1.25rem;">
+        <div style="width: ${aPct}%; background: #f59e0b; min-width: ${totalA ? '2%' : '0'};"></div>
+        <div style="width: ${tiePct}%; background: #eab308; min-width: ${totalTie ? '2%' : '0'};"></div>
+        <div style="width: ${bPct}%; background: #0ea5e9; min-width: ${totalB ? '2%' : '0'};"></div>
+        ${totalVotesAll === 0 ? '<div style="width: 100%; background: var(--line);"></div>' : ''}
+      </div>
+      <div class="scoreboard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: center;">
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #f59e0b;">${aWins}</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim);">css-bash wins</div>
+        </div>
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #0ea5e9;">${bWins}</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim);">vanilla wins</div>
+        </div>
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #eab308;">${globalTies}</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim);">Ties</div>
+        </div>
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--fg);">${totalVotesAll}</div>
+          <div style="font-size: 0.8rem; color: var(--fg-dim);">Total votes</div>
+        </div>
+      </div>
+    `;
+  }
+
   function render() {
     if (!appData || !statsData) return;
 
@@ -230,7 +332,6 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     const { stats, totalVotes } = statsData;
     const userVotesMap = Object.fromEntries((uvArr ?? []).map((v) => [v.challengeId, v.choice]));
     const myProgress = userId ? (progressByRound?.[currentRoundSlug] ?? 0) : 10;
-    // Locked = signed in user with 0 votes in this round. Anonymous browsing stays unlocked.
     const isLocked = userId ? myProgress === 0 : false;
     const isPartial = userId ? myProgress > 0 && myProgress < 10 : false;
 
@@ -265,8 +366,6 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       }
     }
 
-    // Lock state: if locked, show a prominent CTA above and replace body with a 3-row mock.
-    // If partial, show a softer CTA banner above (still readable content).
     const lockedWrapperEl = document.getElementById("locked-wrapper");
     const lockedCtaEl = document.getElementById("locked-cta");
     const partialBannerEl = document.getElementById("partial-banner");
@@ -306,6 +405,9 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     }
 
     if (isLocked) {
+      const miniEl = document.getElementById("round-mini-aggregate");
+      if (miniEl) miniEl.textContent = "";
+
       const sbEl = document.getElementById("scoreboard-content");
       if (sbEl) {
         sbEl.innerHTML = `
@@ -320,9 +422,9 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       const listEl = document.getElementById("challenges-list");
       if (listEl) {
         const fakeRows = [
-          { id: "fake-01", title: "Smooth scrolling parallax with depth layers", feat: "scroll-driven-animations", lpct: 68, rpct: 25, tpct: 7, total: 24 },
-          { id: "fake-02", title: "Container query masonry gallery with adaptive gaps", feat: "container-queries", lpct: 41, rpct: 52, tpct: 7, total: 18 },
-          { id: "fake-03", title: "Anchor-positioned tooltip with view-transition", feat: "anchor-positioning", lpct: 72, rpct: 22, tpct: 6, total: 31 },
+          { id: "fake-01", title: "Smooth scrolling parallax with depth layers", feat: "scroll-driven-animations", aPct: 68, bPct: 25, tPct: 7, total: 24 },
+          { id: "fake-02", title: "Container query masonry gallery with adaptive gaps", feat: "container-queries", aPct: 41, bPct: 52, tPct: 7, total: 18 },
+          { id: "fake-03", title: "Anchor-positioned tooltip with view-transition", feat: "anchor-positioning", aPct: 72, bPct: 22, tPct: 6, total: 31 },
         ];
         listEl.innerHTML = fakeRows
           .map(
@@ -334,18 +436,18 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
                 <div style="font-size: 1rem; font-weight: 700; color: var(--fg);">${r.title}</div>
                 <div style="font-size: 0.75rem; color: var(--fg-dim); margin-top: 4px;">Expected: <code style="font-family: monospace;">${r.feat}</code></div>
               </div>
-              <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 999px; border: 1px solid #f59e0b40; color: #f59e0b; font-weight: 600;">Judge: A wins</span>
+              <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 999px; border: 1px solid #f59e0b40; color: #f59e0b; font-weight: 600;">Judge: css-bash</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
               <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden;">
-                <div style="width: ${r.lpct}%; background: #f59e0b;"></div>
-                <div style="width: ${r.tpct}%; background: #eab308;"></div>
-                <div style="width: ${r.rpct}%; background: #0ea5e9;"></div>
+                <div style="width: ${r.aPct}%; background: #f59e0b;"></div>
+                <div style="width: ${r.tPct}%; background: #eab308;"></div>
+                <div style="width: ${r.bPct}%; background: #0ea5e9;"></div>
               </div>
               <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--fg-dim); flex-wrap: wrap;">
-                <span>LEFT: <strong style="color: #f59e0b;">${r.lpct}%</strong></span>
-                <span>Tie: <strong style="color: #eab308;">${r.tpct}%</strong></span>
-                <span>RIGHT: <strong style="color: #0ea5e9;">${r.rpct}%</strong></span>
+                <span>css-bash: <strong style="color: #f59e0b;">${r.aPct}%</strong> (${Math.round(r.total * r.aPct / 100)})</span>
+                <span>Tie: <strong style="color: #eab308;">${r.tPct}%</strong> (${Math.round(r.total * r.tPct / 100)})</span>
+                <span>vanilla: <strong style="color: #0ea5e9;">${r.bPct}%</strong> (${Math.round(r.total * r.bPct / 100)})</span>
                 <span style="margin-left: auto;">${r.total} votes</span>
               </div>
             </div>
@@ -374,11 +476,10 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
         const bVotes =
           (sides.left === "B-without-mcp" ? s.left || 0 : 0) +
           (sides.right === "B-without-mcp" ? s.right || 0 : 0);
-        const tieVotes = s.tie || 0;
 
         if (aVotes > bVotes) aWins++;
         else if (bVotes > aVotes) bWins++;
-        else if (tieVotes > 0 || aVotes === bVotes) ties++;
+        else ties++;
       }
 
       scoreboardEl.innerHTML = `
@@ -403,6 +504,38 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
       `;
     }
 
+    const miniEl = document.getElementById("round-mini-aggregate");
+    if (miniEl && round) {
+      let roundA = 0;
+      let roundB = 0;
+      let roundTie = 0;
+
+      for (const challenge of challenges) {
+        const s = stats[challenge.id];
+        if (!s) continue;
+        const sides = variantSides[challenge.id];
+        if (!sides) continue;
+
+        const aVotes =
+          (sides.left === "A-with-mcp" ? (s.left || 0) : 0) +
+          (sides.right === "A-with-mcp" ? (s.right || 0) : 0);
+        const bVotes =
+          (sides.left === "B-without-mcp" ? (s.left || 0) : 0) +
+          (sides.right === "B-without-mcp" ? (s.right || 0) : 0);
+
+        roundA += aVotes;
+        roundB += bVotes;
+        roundTie += s.tie || 0;
+      }
+
+      const roundTotal = roundA + roundB + roundTie || 1;
+      const rAPct = Math.round((roundA / roundTotal) * 100);
+      const rBPct = Math.round((roundB / roundTotal) * 100);
+      const rTPct = Math.round((roundTie / roundTotal) * 100);
+
+      miniEl.innerHTML = `<span style="font-weight: 600; color: var(--fg);">${round.name}:</span> css-bash <strong style="color: #f59e0b;">${rAPct}%</strong> · vanilla <strong style="color: #0ea5e9;">${rBPct}%</strong> · ties <strong style="color: #eab308;">${rTPct}%</strong>`;
+    }
+
     const listEl = document.getElementById("challenges-list");
     if (listEl) {
       listEl.innerHTML = challenges
@@ -410,16 +543,19 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
           const judg = (judgements ?? []).find((j) => j.challengeId === challenge.id);
           const sides = (variantSides ?? {})[challenge.id];
           const s = stats[challenge.id] || { left: 0, right: 0, tie: 0, total: 0 };
-          const total = s.total || 1;
 
-          const leftPct = Math.round(((s.left || 0) / total) * 100);
-          const rightPct = Math.round(((s.right || 0) / total) * 100);
-          const tiePct = Math.round(((s.tie || 0) / total) * 100);
+          const aVotes =
+            (sides?.left === "A-with-mcp" ? (s.left || 0) : 0) +
+            (sides?.right === "A-with-mcp" ? (s.right || 0) : 0);
+          const bVotes =
+            (sides?.left === "B-without-mcp" ? (s.left || 0) : 0) +
+            (sides?.right === "B-without-mcp" ? (s.right || 0) : 0);
+          const tieVotes = s.tie || 0;
+          const total = aVotes + bVotes + tieVotes || 1;
 
-          const leftLabel = sides?.left === "A-with-mcp" ? "A (with MCP)" : "B (no MCP)";
-          const rightLabel = sides?.right === "A-with-mcp" ? "A (with MCP)" : "B (no MCP)";
-          const leftColor = sides?.left === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
-          const rightColor = sides?.right === "A-with-mcp" ? "#f59e0b" : "#0ea5e9";
+          const aPct = Math.round((aVotes / total) * 100);
+          const bPct = Math.round((bVotes / total) * 100);
+          const tiePct = Math.round((tieVotes / total) * 100);
 
           const judgeBadge = judg
             ? (() => {
@@ -428,10 +564,12 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
                   (judg.winner === "left" && sides?.left === "A-with-mcp") ||
                   (judg.winner === "right" && sides?.right === "A-with-mcp");
                 const color = isATie ? "#eab308" : aWon ? "#f59e0b" : "#0ea5e9";
-                const label = isATie ? "Tie" : aWon ? "A wins" : "B wins";
+                const label = isATie ? "tie" : aWon ? "css-bash" : "vanilla";
                 return `<span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 999px; border: 1px solid ${color}40; color: ${color}; font-weight: 600; flex-shrink: 0;">Judge: ${label}</span>`;
               })()
             : "";
+
+          const rawTotal = (s.left || 0) + (s.right || 0) + (s.tie || 0);
 
           return `
           <div style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-secondary);">
@@ -445,16 +583,16 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
             </div>
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
               <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden;">
-                <div style="width: ${leftPct}%; background: ${leftColor}; transition: width 0.5s; min-width: ${s.left ? "2%" : "0"};"></div>
-                <div style="width: ${tiePct}%; background: #eab308; transition: width 0.5s; min-width: ${s.tie ? "2%" : "0"};"></div>
-                <div style="width: ${rightPct}%; background: ${rightColor}; transition: width 0.5s; min-width: ${s.right ? "2%" : "0"};"></div>
-                ${s.total === 0 ? '<div style="width: 100%; background: var(--line);"></div>' : ""}
+                <div style="width: ${aPct}%; background: #f59e0b; transition: width 0.5s; min-width: ${aVotes ? "2%" : "0"};"></div>
+                <div style="width: ${tiePct}%; background: #eab308; transition: width 0.5s; min-width: ${tieVotes ? "2%" : "0"};"></div>
+                <div style="width: ${bPct}%; background: #0ea5e9; transition: width 0.5s; min-width: ${bVotes ? "2%" : "0"};"></div>
+                ${rawTotal === 0 ? '<div style="width: 100%; background: var(--line);"></div>' : ""}
               </div>
               <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--fg-dim); flex-wrap: wrap;">
-                <span>LEFT (${leftLabel}): <strong style="color: ${leftColor};">${leftPct}%</strong> (${s.left || 0})</span>
-                <span>Tie: <strong style="color: #eab308;">${tiePct}%</strong> (${s.tie || 0})</span>
-                <span>RIGHT (${rightLabel}): <strong style="color: ${rightColor};">${rightPct}%</strong> (${s.right || 0})</span>
-                <span style="margin-left: auto;">${s.total || 0} votes</span>
+                <span>css-bash: <strong style="color: #f59e0b;">${aPct}%</strong> (${aVotes})</span>
+                <span>Tie: <strong style="color: #eab308;">${tiePct}%</strong> (${tieVotes})</span>
+                <span>vanilla: <strong style="color: #0ea5e9;">${bPct}%</strong> (${bVotes})</span>
+                <span style="margin-left: auto;">${rawTotal} votes</span>
               </div>
             </div>
           </div>`;
@@ -475,11 +613,11 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
               if (!v)
                 return `<tr><td style="padding: 8px 0; color: var(--fg-dim);">${c.title}</td><td style="padding: 8px; color: var(--fg-dim);">-</td></tr>`;
               const choiceLabel =
-                v === "left"
-                  ? `LEFT (${sides?.left === "A-with-mcp" ? "A" : "B"})`
-                  : v === "right"
-                    ? `RIGHT (${sides?.right === "A-with-mcp" ? "A" : "B"})`
-                    : "Tie";
+                v === "tie"
+                  ? "Tie"
+                  : v === "left"
+                    ? sides?.left === "A-with-mcp" ? "css-bash" : "vanilla"
+                    : sides?.right === "A-with-mcp" ? "css-bash" : "vanilla";
               return `<tr><td style="padding: 8px 0; color: var(--fg);">${c.title}</td><td style="padding: 8px; color: var(--fg); font-weight: 600;">${choiceLabel}</td></tr>`;
             })
             .join("");
@@ -494,5 +632,6 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     loadAll(slug);
   });
 
+  loadGlobal();
   loadAll(currentRoundSlug);
 </script>
