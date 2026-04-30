@@ -210,23 +210,34 @@ async function reRunChallenge(challengeId: string): Promise<void> {
     throw new Error(`Challenge ${challengeId} not found in DB`);
   }
 
-  const roundSlug = challengeId.slice(0, 2) === "02"
-    ? "02-animations-motion"
-    : challengeId.slice(0, 2) === "03"
-    ? "03-forms-inputs"
-    : challengeId.slice(0, 2) === "04"
-    ? "04-color-theming"
-    : challengeId.slice(0, 2) === "05"
-    ? "05-typography-text"
-    : "06-responsive-container";
+  const isLegacyRound1 = /^\d{2}-[a-z]/.test(challengeId) && !/^\d{2}-\d{2}-/.test(challengeId);
 
-  const roundModule = await import(
-    `../src/data/challenges/${roundSlug}.ts`
-  ) as { CHALLENGES: Challenge[] };
+  let challenge: Challenge | undefined;
+  if (isLegacyRound1) {
+    const legacy = await import("../src/data/challenges.ts") as { CHALLENGES: Challenge[] };
+    challenge = legacy.CHALLENGES.find((c) => c.id === challengeId);
+    if (!challenge) {
+      throw new Error(`Challenge ${challengeId} not found in legacy challenges.ts`);
+    }
+  } else {
+    const roundSlug = challengeId.slice(0, 2) === "02"
+      ? "02-animations-motion"
+      : challengeId.slice(0, 2) === "03"
+      ? "03-forms-inputs"
+      : challengeId.slice(0, 2) === "04"
+      ? "04-color-theming"
+      : challengeId.slice(0, 2) === "05"
+      ? "05-typography-text"
+      : "06-responsive-container";
 
-  const challenge = roundModule.CHALLENGES.find((c) => c.id === challengeId);
-  if (!challenge) {
-    throw new Error(`Challenge ${challengeId} not found in TS file for round ${roundSlug}`);
+    const roundModule = await import(
+      `../src/data/challenges/${roundSlug}.ts`
+    ) as { CHALLENGES: Challenge[] };
+
+    challenge = roundModule.CHALLENGES.find((c) => c.id === challengeId);
+    if (!challenge) {
+      throw new Error(`Challenge ${challengeId} not found in TS file for round ${roundSlug}`);
+    }
   }
 
   const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
