@@ -3,7 +3,7 @@ import type { APIRoute } from "astro";
 import { eq } from "drizzle-orm";
 
 import { db } from "../../db";
-import { votes } from "../../db/schema";
+import { challenges as challengesTable, votes } from "../../db/schema";
 import {
   getAllRounds,
   getChallengesForRound,
@@ -43,15 +43,36 @@ export const GET: APIRoute = async ({ locals, url }) => {
   ]);
 
   let userVotes: Array<{ challengeId: string; choice: string }> = [];
-  if (userId && challengeIds.length > 0) {
+  let progressByRound: Record<string, number> = {};
+  if (userId) {
     try {
+      // Pull every vote for this user joined with the round_id of each
+      // challenge so we can both filter the current round and tally
+      // completion across all rounds in one query.
       const rows = await db
-        .select({ challengeId: votes.challengeId, choice: votes.choice })
+        .select({
+          challengeId: votes.challengeId,
+          choice: votes.choice,
+          roundId: challengesTable.roundId,
+        })
         .from(votes)
+        .innerJoin(challengesTable, eq(votes.challengeId, challengesTable.id))
         .where(eq(votes.userId, userId));
-      userVotes = rows.filter((v) => challengeIds.includes(v.challengeId));
+
+      userVotes = rows
+        .filter((v) => challengeIds.includes(v.challengeId))
+        .map(({ challengeId, choice }) => ({ challengeId, choice }));
+
+      const countByRoundId: Record<number, number> = {};
+      for (const r of rows) {
+        countByRoundId[r.roundId] = (countByRoundId[r.roundId] ?? 0) + 1;
+      }
+      progressByRound = Object.fromEntries(
+        allRounds.map((r) => [r.slug, countByRoundId[r.id] ?? 0]),
+      );
     } catch {
       userVotes = [];
+      progressByRound = {};
     }
   }
 
@@ -70,6 +91,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
       variantSides,
       userVotes,
       htmlMap,
+      progressByRound,
     }),
     {
       headers: { "Content-Type": "application/json" },
