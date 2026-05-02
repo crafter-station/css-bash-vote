@@ -393,6 +393,15 @@ if (!userId) {
       overflow-x: auto;
     }
 
+    /* Right pane is the base layer (full width). When showing code, encapsulate
+       to the visible right side so the code starts where the split exposes it. */
+    .pane-right .pane-code {
+      padding-left: calc(var(--split) + 1rem);
+    }
+    .pane-right .pane-code pre {
+      padding-right: 1rem;
+    }
+
     .vote-footer {
       flex-shrink: 0;
       border-top: 1px solid var(--line);
@@ -460,7 +469,6 @@ if (!userId) {
       right: 0;
       background: var(--bg-secondary);
       border-top: 1px solid var(--line);
-      padding: 1.5rem;
       z-index: 100;
       max-height: 60vh;
       overflow-y: auto;
@@ -469,15 +477,47 @@ if (!userId) {
     .reveal-inner {
       max-width: 900px;
       margin: 0 auto;
+      padding: 1.5rem;
+      padding-top: 0;
     }
 
     .reveal-header {
+      position: sticky;
+      top: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
       flex-wrap: wrap;
       gap: 0.5rem;
+      padding: 1rem 0 0.75rem;
+      margin-bottom: 1rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--line);
+      z-index: 2;
+    }
+
+    /* Floating "back to compare" pill — fixed top-right when reveal is open */
+    .reveal-back-fab {
+      position: fixed;
+      top: 70px;
+      right: 16px;
+      z-index: 101;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--fg);
+      color: var(--bg);
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      font-family: inherit;
+    }
+    .reveal-back-fab:hover {
+      opacity: 0.9;
     }
 
     .reveal-grid {
@@ -769,7 +809,11 @@ if (!userId) {
 
     const revealPanel =
       reveal && judg
-        ? `<div class="reveal-panel">
+        ? `<button id="reveal-back-fab" class="reveal-back-fab" type="button" title="Back to compare view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          back to compare
+        </button>
+        <div class="reveal-panel">
         <div class="reveal-inner">
           <div class="reveal-header">
             <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Judge verdict</h3>
@@ -854,7 +898,7 @@ if (!userId) {
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); flex-wrap: wrap;">
             <button id="reveal-btn-prev" class="nav-btn" ${currentIndex === 0 ? "disabled" : ""}>${iconLeft} back</button>
-            <button id="reveal-btn-close" class="nav-btn">hide judge</button>
+            <button id="reveal-btn-close" class="nav-btn">back to compare</button>
             <button id="reveal-btn-next" class="nav-btn">
               ${currentIndex < data.challenges.length - 1 ? `next ${iconRight}` : `results ${iconRight}`}
             </button>
@@ -949,7 +993,7 @@ if (!userId) {
                  <button id="btn-right" class="vote-btn" style="border: 2px solid #0ea5e9; color: #0ea5e9;">RIGHT wins ${iconRight}</button>`
               : `<span style="font-size: 0.85rem; color: var(--fg-dim);">voted: <strong style="color: var(--fg);">${voted.toUpperCase()}</strong></span>
                  ${badge ? `<span style="font-size: 0.75rem; padding: 3px 10px; border-radius: 999px; border: 1px solid ${badgeColor}; color: ${badgeColor}; display: inline-flex; align-items: center; gap: 4px;">${badgeIcon} ${badgeLabel}</span>` : ""}
-                 <button id="btn-reveal" class="nav-btn">${reveal ? "hide judge" : "see judge"}</button>`
+                 <button id="btn-reveal" class="nav-btn">${reveal ? "back to compare" : "see judge"}</button>`
           }
         </div>
 
@@ -1031,6 +1075,10 @@ if (!userId) {
         showPrompt = false;
         render();
       }
+    });
+    document.getElementById("reveal-back-fab")?.addEventListener("click", () => {
+      showReveal[challenge.id] = false;
+      render();
     });
     document.getElementById("reveal-btn-close")?.addEventListener("click", () => {
       showReveal[challenge.id] = false;
