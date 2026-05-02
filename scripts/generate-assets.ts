@@ -42,13 +42,13 @@ const CS_ICON_PATH =
 // JetBrains Mono is a clean monospace for the logotype. Inter for prose.
 async function loadFonts() {
 	const inter800 = await fetch(
-		"https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIa1ZL7W0Q5nw.woff",
+		"https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-800-normal.woff",
 	).then((r) => r.arrayBuffer());
 	const inter500 = await fetch(
-		"https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIa1ZL7W0Q5nw.woff",
+		"https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-500-normal.woff",
 	).then((r) => r.arrayBuffer());
 	const jbMono700 = await fetch(
-		"https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbY2o-flEEny0FZhsfKu5WU4xD7OwA0lQ.woff",
+		"https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-700-normal.woff",
 	).then((r) => r.arrayBuffer());
 	return { inter800, inter500, jbMono700 };
 }
@@ -324,6 +324,8 @@ function ogTemplate(width: number, height: number) {
 								type: "div",
 								props: {
 									style: {
+										display: "flex",
+										alignItems: "baseline",
 										fontFamily: "JetBrains Mono",
 										fontSize: 22,
 										fontWeight: 700,
