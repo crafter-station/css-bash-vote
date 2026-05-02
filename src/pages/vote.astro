@@ -823,8 +823,17 @@ if (!userId) {
       }
     }
 
+    /* Tabs are hidden by default; the @media (max-width: 767px) block above
+       overrides this to display: flex on mobile. The override sits earlier in
+       the stylesheet, so be careful not to add .mobile-tabs rules below this. */
     .mobile-tabs {
       display: none;
+    }
+
+    @media (max-width: 767px) {
+      .mobile-tabs {
+        display: flex !important;
+      }
     }
   </style>
 
