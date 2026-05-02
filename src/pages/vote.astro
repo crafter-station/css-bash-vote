@@ -520,6 +520,166 @@ if (!userId) {
       opacity: 0.9;
     }
 
+    .shortcuts-hint {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      pointer-events: none;
+      z-index: 10;
+      animation: hint-fade 5s ease forwards;
+    }
+
+    .shortcuts-hint:hover {
+      animation: none;
+      opacity: 1;
+    }
+
+    @keyframes hint-fade {
+      0% { opacity: 0.7; }
+      60% { opacity: 0.7; }
+      100% { opacity: 0; }
+    }
+
+    @media (max-width: 767px) {
+      .shortcuts-hint {
+        display: none;
+      }
+    }
+
+    .shortcuts-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .shortcuts-table td {
+      padding: 5px 8px;
+      vertical-align: middle;
+    }
+
+    .shortcuts-table td:first-child {
+      width: 40%;
+      color: var(--fg-dim);
+    }
+
+    .shortcuts-table tr:not(:last-child) td {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .shortcut-key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1px 6px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      color: var(--fg);
+      margin-right: 3px;
+    }
+
+    .vote-toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: #10b981;
+      color: white;
+      font-weight: 700;
+      font-size: 0.875rem;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+      z-index: 300;
+      pointer-events: none;
+      animation: toast-show 2.2s ease forwards;
+    }
+
+    @keyframes toast-show {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+      12% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      75% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+    }
+
+    .error-toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: #ef4444;
+      color: white;
+      font-weight: 700;
+      font-size: 0.875rem;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+      z-index: 300;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-toast-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-toast-retry-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border-radius: 999px;
+      padding: 2px 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .error-toast-retry-btn:hover {
+      background: rgba(255,255,255,0.35);
+    }
+
+    .pane-skeleton {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: var(--bg-secondary);
+      overflow: hidden;
+    }
+
+    .pane-skeleton::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, var(--line) 50%, transparent 100%);
+      animation: skeleton-sweep 1.5s linear infinite;
+    }
+
+    @keyframes skeleton-sweep {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .pane.is-loading .pane-skeleton {
+      display: block;
+    }
+
     .reveal-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -567,6 +727,104 @@ if (!userId) {
         font-size: 0.72rem;
         padding: 3px 10px;
       }
+    }
+
+    @media (max-width: 767px) {
+      .pane-handle {
+        display: none;
+      }
+
+      .panes-grid {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        touch-action: auto;
+      }
+
+      .pane {
+        position: relative;
+        inset: unset;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .pane-left {
+        clip-path: none;
+        z-index: 0;
+      }
+
+      .pane[data-mobile-hidden="true"] {
+        display: none;
+      }
+
+      .mobile-tabs {
+        display: flex;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--line);
+        background: var(--bg-secondary);
+      }
+
+      .mobile-tab {
+        flex: 1;
+        padding: 8px 0;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--fg-dim);
+        font-size: 0.8rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        transition: color 0.15s, border-color 0.15s;
+      }
+
+      .mobile-tab.active {
+        color: var(--fg);
+        border-bottom-color: var(--fg);
+      }
+
+      .vote-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 6px 0.75rem;
+        gap: 4px;
+      }
+
+      .vote-header-center {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .vote-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        justify-content: center;
+      }
+
+      .vote-footer > .nav-btn:first-child,
+      .vote-footer > .nav-btn:last-child {
+        flex: 0 0 auto;
+      }
+
+      .vote-actions {
+        order: -1;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .pane-right .pane-code {
+        padding-left: 1rem;
+      }
+    }
+
+    .mobile-tabs {
+      display: none;
     }
   </style>
 
@@ -637,9 +895,14 @@ if (!userId) {
   let showRightCode: Record<string, boolean> = {};
   let showReveal: Record<string, boolean> = {};
   let showPrompt = false;
+  let showShortcuts = false;
   let userVotes: Record<string, string> = {};
   let freshlyVoted: Record<string, boolean> = {};
   let splitPct = 50;
+  let mobileSide: "left" | "right" = "left";
+  const MOBILE_BP = 768;
+  const isMobile = () => window.innerWidth < MOBILE_BP;
+  let _lastMobile = false;
   const highlightCache: Record<string, string> = {};
 
   async function highlight(src: string): Promise<string> {
@@ -662,9 +925,55 @@ if (!userId) {
     }
   }
 
+  function showErrorToast(retrying: boolean, onRetry?: () => void) {
+    const existing = document.getElementById("error-toast");
+    if (existing) existing.remove();
+    const el = document.createElement("div");
+    el.id = "error-toast";
+    el.className = "error-toast";
+    if (retrying) {
+      el.innerHTML = `<span class="error-toast-spinner"></span><span>Couldn't load data. Retrying…</span>`;
+    } else {
+      const span = document.createElement("span");
+      span.textContent = "Couldn't load data. ";
+      const btn = document.createElement("button");
+      btn.className = "error-toast-retry-btn";
+      btn.textContent = "Retry";
+      btn.addEventListener("click", () => {
+        el.remove();
+        if (onRetry) onRetry();
+      });
+      el.appendChild(span);
+      el.appendChild(btn);
+    }
+    document.body.appendChild(el);
+  }
+
+  async function loadWithRetry(url: string, attempts = 3): Promise<Response> {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          document.getElementById("error-toast")?.remove();
+          return res;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        if (i < attempts - 1) {
+          showErrorToast(true);
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, i)));
+        } else {
+          showErrorToast(false, () => loadWithRetry(url, attempts).then(() => loadData(currentRoundSlug || undefined)));
+          throw err;
+        }
+      }
+    }
+    throw new Error("unreachable");
+  }
+
   async function loadData(roundSlug?: string) {
     const qs = roundSlug ? `?round=${roundSlug}` : "";
-    const res = await fetch(`/api/data${qs}`);
+    const res = await loadWithRetry(`/api/data${qs}`);
     data = (await res.json()) as AppData;
     userVotes = {};
     for (const v of data.userVotes) {
@@ -686,6 +995,17 @@ if (!userId) {
     await loadData(slug);
   }
 
+  function showToast(message: string) {
+    const existing = document.getElementById("vote-toast");
+    if (existing) existing.remove();
+    const el = document.createElement("div");
+    el.id = "vote-toast";
+    el.className = "vote-toast";
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2300);
+  }
+
   async function submitVote(challengeId: string, choice: string) {
     const res = await fetch("/api/vote", {
       method: "POST",
@@ -702,6 +1022,7 @@ if (!userId) {
           data.progressByRound[currentRoundSlug] =
             (data.progressByRound[currentRoundSlug] ?? 0) + 1;
         }
+        showToast(`✓ Vote recorded · ${choice.toUpperCase()}`);
       }
       render();
     }
@@ -747,14 +1068,14 @@ if (!userId) {
     return "disagree";
   }
 
-  const iconCode2 = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22" stroke-width="1.5" stroke-dasharray="2 2"/></svg>`;
-  const iconEye = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-  const iconLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`;
-  const iconRight = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
-  const iconEqual = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/></svg>`;
-  const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
-  const iconX = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
-  const iconInfo = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+  const iconCode2 = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22" stroke-width="1.5" stroke-dasharray="2 2"/></svg>`;
+  const iconEye = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const iconLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>`;
+  const iconRight = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>`;
+  const iconEqual = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/></svg>`;
+  const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const iconX = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+  const iconInfo = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
 
   async function render() {
     if (!data) return;
@@ -797,7 +1118,7 @@ if (!userId) {
           .filter(Boolean)
           .join(" ");
         const check = isComplete
-          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`
           : "";
         const counter =
           progress > 0
@@ -809,8 +1130,8 @@ if (!userId) {
 
     const revealPanel =
       reveal && judg
-        ? `<button id="reveal-back-fab" class="reveal-back-fab" type="button" title="Back to compare view">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        ? `<button id="reveal-back-fab" class="reveal-back-fab" type="button" title="Back to compare view" aria-label="Back to compare view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
           back to compare
         </button>
         <div class="reveal-panel">
@@ -932,7 +1253,33 @@ if (!userId) {
               <span>Expected: <strong style="color: var(--fg);">${challenge.expectedFeature}</strong></span>
             </div>
             <pre>${challenge.prompt.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-            <button id="btn-prompt-close" class="prompt-modal-close" type="button" title="Close">${iconX}</button>
+            <button id="btn-prompt-close" class="prompt-modal-close" type="button" title="Close" aria-label="Close prompt">${iconX}</button>
+          </div>
+        </div>
+      </div>`
+          : ""
+      }
+
+      ${
+        showShortcuts
+          ? `<div class="prompt-overlay" id="shortcuts-overlay">
+        <div class="prompt-modal-wrapper">
+          <div class="prompt-modal">
+            <h3>Keyboard shortcuts</h3>
+            <table class="shortcuts-table">
+              <tbody>
+                <tr><td><span class="shortcut-key">←</span> <span class="shortcut-key">→</span></td><td>Previous / next challenge</td></tr>
+                <tr><td><span class="shortcut-key">1</span></td><td>Vote LEFT wins</td></tr>
+                <tr><td><span class="shortcut-key">2</span></td><td>Vote tie</td></tr>
+                <tr><td><span class="shortcut-key">3</span></td><td>Vote RIGHT wins</td></tr>
+                <tr><td><span class="shortcut-key">j</span></td><td>Toggle judge reveal (after voting)</td></tr>
+                <tr><td><span class="shortcut-key">c</span></td><td>Toggle code on left pane</td></tr>
+                <tr><td><span class="shortcut-key">v</span></td><td>Toggle code on right pane</td></tr>
+                <tr><td><span class="shortcut-key">?</span></td><td>Toggle this shortcuts modal</td></tr>
+                <tr><td><span class="shortcut-key">Esc</span></td><td>Close modal / close reveal panel</td></tr>
+              </tbody>
+            </table>
+            <button id="btn-shortcuts-close" class="prompt-modal-close" type="button" title="Close" aria-label="Close shortcuts">${iconX}</button>
           </div>
         </div>
       </div>`
@@ -943,43 +1290,52 @@ if (!userId) {
         ${roundPills}
       </div>
 
+      <div class="mobile-tabs" id="mobile-tabs">
+        <button class="mobile-tab${mobileSide === "left" ? " active" : ""}" id="mobile-tab-left" type="button">LEFT</button>
+        <button class="mobile-tab${mobileSide === "right" ? " active" : ""}" id="mobile-tab-right" type="button">RIGHT</button>
+      </div>
+
       <div class="panes-grid" id="panes-grid" style="flex: 1; min-height: 0;">
-        <div class="pane pane-right">
+        <div class="pane pane-right is-loading" id="pane-right-el" data-mobile-hidden="${mobileSide === "left" ? "true" : "false"}">
           ${
             rightCodeOn
               ? `<div class="pane-code">${rightHighlighted || `<pre><code>${rightHtml.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`}</div>`
               : `<iframe id="right-iframe" class="pane-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin"></iframe>`
           }
+          <div class="pane-skeleton"></div>
         </div>
 
-        <div class="pane pane-left">
+        <div class="pane pane-left is-loading" id="pane-left-el" data-mobile-hidden="${mobileSide === "right" ? "true" : "false"}">
           ${
             leftCodeOn
               ? `<div class="pane-code">${leftHighlighted || `<pre><code>${leftHtml.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`}</div>`
               : `<iframe id="left-iframe" class="pane-iframe" srcdoc="" sandbox="allow-scripts allow-same-origin"></iframe>`
           }
+          <div class="pane-skeleton"></div>
         </div>
 
         <div class="pane-controls left">
           <span class="label">LEFT</span>
-          <button id="left-toggle" class="toggle${leftCodeOn ? " active" : ""}" title="${leftCodeOn ? "View preview" : "View code"}">
+          <button id="left-toggle" class="toggle${leftCodeOn ? " active" : ""}" title="${leftCodeOn ? "View preview" : "View code"}" aria-label="${leftCodeOn ? "View left pane preview" : "View left pane code"}" aria-pressed="${leftCodeOn}">
             ${leftCodeOn ? iconEye : iconCode2}
           </button>
         </div>
 
         <div class="pane-controls right">
           <span class="label">RIGHT</span>
-          <button id="right-toggle" class="toggle${rightCodeOn ? " active" : ""}" title="${rightCodeOn ? "View preview" : "View code"}">
+          <button id="right-toggle" class="toggle${rightCodeOn ? " active" : ""}" title="${rightCodeOn ? "View preview" : "View code"}" aria-label="${rightCodeOn ? "View right pane preview" : "View right pane code"}" aria-pressed="${rightCodeOn}">
             ${rightCodeOn ? iconEye : iconCode2}
           </button>
         </div>
 
-        <div class="pane-handle" id="pane-handle" role="separator" aria-label="Drag to compare" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+        <div class="pane-handle" id="pane-handle" role="separator" aria-label="Drag to resize panes" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
           <div class="pane-handle-grip">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><polyline points="9 6 9 6"/></svg>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: -6px;"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/><polyline points="9 6 9 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: -6px;" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>
+
+        <div class="shortcuts-hint" id="shortcuts-hint">Press ? for shortcuts</div>
       </div>
 
       <div class="vote-footer">
@@ -1012,8 +1368,26 @@ if (!userId) {
       "right-iframe",
     ) as HTMLIFrameElement | null;
 
-    if (leftIframe) leftIframe.srcdoc = leftHtml;
-    if (rightIframe) rightIframe.srcdoc = rightHtml;
+    const leftPaneEl = document.getElementById("pane-left-el");
+    const rightPaneEl = document.getElementById("pane-right-el");
+
+    if (leftIframe) {
+      leftIframe.onload = () => {
+        leftPaneEl?.classList.remove("is-loading");
+      };
+      leftIframe.srcdoc = leftHtml;
+    } else {
+      leftPaneEl?.classList.remove("is-loading");
+    }
+
+    if (rightIframe) {
+      rightIframe.onload = () => {
+        rightPaneEl?.classList.remove("is-loading");
+      };
+      rightIframe.srcdoc = rightHtml;
+    } else {
+      rightPaneEl?.classList.remove("is-loading");
+    }
 
     document.getElementById("btn-prev")?.addEventListener("click", () => {
       if (currentIndex > 0) {
@@ -1060,6 +1434,17 @@ if (!userId) {
     document.getElementById("prompt-overlay")?.addEventListener("click", (e) => {
       if ((e.target as HTMLElement).id === "prompt-overlay") {
         showPrompt = false;
+        render();
+      }
+    });
+
+    document.getElementById("btn-shortcuts-close")?.addEventListener("click", () => {
+      showShortcuts = false;
+      render();
+    });
+    document.getElementById("shortcuts-overlay")?.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).id === "shortcuts-overlay") {
+        showShortcuts = false;
         render();
       }
     });
@@ -1117,6 +1502,7 @@ if (!userId) {
     }
 
     attachDragHandle();
+    attachMobileTabs();
   }
 
   function attachDragHandle() {
@@ -1191,19 +1577,47 @@ if (!userId) {
     handle.addEventListener("dblclick", () => setSplit(50));
   }
 
+  function attachMobileTabs() {
+    document.getElementById("mobile-tab-left")?.addEventListener("click", () => {
+      if (mobileSide !== "left") {
+        mobileSide = "left";
+        render();
+      }
+    });
+    document.getElementById("mobile-tab-right")?.addEventListener("click", () => {
+      if (mobileSide !== "right") {
+        mobileSide = "right";
+        render();
+      }
+    });
+  }
+
   function handleKey(e: KeyboardEvent) {
     if (!data) return;
     const tag = (e.target as HTMLElement).tagName;
     if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (showPrompt || showShortcuts) {
+      if (e.key === "Escape") {
+        showPrompt = false;
+        showShortcuts = false;
+        render();
+      }
+      return;
+    }
 
     const challenge = data.challenges[currentIndex];
+    const voted = userVotes[challenge.id];
+    const judg = getJudgement(challenge.id);
+    const reveal = showReveal[challenge.id];
+
     if (e.key === "Escape") {
-      if (showPrompt) {
-        showPrompt = false;
+      if (reveal) {
+        showReveal[challenge.id] = false;
         render();
-        return;
       }
+      return;
     }
+
     if (e.key === "ArrowLeft") {
       if (currentIndex > 0) {
         currentIndex--;
@@ -1217,14 +1631,25 @@ if (!userId) {
         render();
       }
     } else if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
-      showPrompt = !showPrompt;
+      showShortcuts = !showShortcuts;
       render();
     } else if (e.key === "1") {
-      submitVote(challenge.id, "left");
+      if (!voted) submitVote(challenge.id, "left");
     } else if (e.key === "2") {
-      submitVote(challenge.id, "tie");
+      if (!voted) submitVote(challenge.id, "tie");
     } else if (e.key === "3") {
-      submitVote(challenge.id, "right");
+      if (!voted) submitVote(challenge.id, "right");
+    } else if (e.key === "j" || e.key === "J") {
+      if (voted && judg) {
+        showReveal[challenge.id] = !reveal;
+        render();
+      }
+    } else if (e.key === "c" || e.key === "C") {
+      showLeftCode[challenge.id] = !showLeftCode[challenge.id];
+      render();
+    } else if (e.key === "v" || e.key === "V") {
+      showRightCode[challenge.id] = !showRightCode[challenge.id];
+      render();
     } else if (e.key === "[") {
       showLeftCode[challenge.id] = !showLeftCode[challenge.id];
       render();
@@ -1236,11 +1661,33 @@ if (!userId) {
     }
   }
 
-  window.addEventListener("popstate", () => {
-    const slug = new URLSearchParams(window.location.search).get("round") ?? "";
-    loadData(slug || undefined);
-  });
+  function initPage() {
+    currentRoundSlug = new URLSearchParams(window.location.search).get("round") ?? "";
+    showLeftCode = {};
+    showRightCode = {};
+    showReveal = {};
+    showPrompt = false;
+    showShortcuts = false;
+    userVotes = {};
+    freshlyVoted = {};
+    splitPct = 50;
+    mobileSide = "left";
+    data = null;
+    currentIndex = 0;
+    _lastMobile = isMobile();
 
-  document.addEventListener("keydown", handleKey);
-  loadData(currentRoundSlug || undefined);
+    document.addEventListener("keydown", handleKey);
+
+    window.addEventListener("resize", () => {
+      const nowMobile = isMobile();
+      if (nowMobile !== _lastMobile) {
+        _lastMobile = nowMobile;
+        render();
+      }
+    });
+
+    loadData(currentRoundSlug || undefined);
+  }
+
+  document.addEventListener("astro:page-load", initPage);
 </script>

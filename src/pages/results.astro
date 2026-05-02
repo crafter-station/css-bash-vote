@@ -211,18 +211,78 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
   let statsData = null;
   let globalData = null;
 
+  function showErrorToast(retrying, onRetry) {
+    const existing = document.getElementById("error-toast");
+    if (existing) existing.remove();
+    const el = document.createElement("div");
+    el.id = "error-toast";
+    el.style.cssText = "position:fixed;top:70px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:999px;background:#ef4444;color:white;font-weight:700;font-size:0.875rem;box-shadow:0 4px 20px rgba(239,68,68,0.4);z-index:300;display:inline-flex;align-items:center;gap:8px;";
+    if (retrying) {
+      const spinner = document.createElement("span");
+      spinner.style.cssText = "width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;";
+      el.appendChild(spinner);
+      const text = document.createElement("span");
+      text.textContent = "Couldn't load data. Retrying…";
+      el.appendChild(text);
+    } else {
+      const span = document.createElement("span");
+      span.textContent = "Couldn't load data. ";
+      const btn = document.createElement("button");
+      btn.style.cssText = "background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;font-weight:700;font-size:0.8rem;border-radius:999px;padding:2px 10px;cursor:pointer;font-family:inherit;";
+      btn.textContent = "Retry";
+      btn.addEventListener("click", () => { el.remove(); if (onRetry) onRetry(); });
+      el.appendChild(span);
+      el.appendChild(btn);
+    }
+    document.body.appendChild(el);
+    if (!document.getElementById("spinner-style")) {
+      const s = document.createElement("style");
+      s.id = "spinner-style";
+      s.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
+      document.head.appendChild(s);
+    }
+  }
+
+  async function loadWithRetry(url, attempts = 3) {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) { document.getElementById("error-toast")?.remove(); return res; }
+        throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        if (i < attempts - 1) {
+          showErrorToast(true, null);
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, i)));
+        } else {
+          showErrorToast(false, () => { document.getElementById("error-toast")?.remove(); loadGlobal(); loadAll(currentRoundSlug); });
+          throw err;
+        }
+      }
+    }
+  }
+
   async function loadGlobal() {
-    const res = await fetch("/api/data/all");
+    let res;
+    try {
+      res = await loadWithRetry("/api/data/all");
+    } catch (_) {
+      return;
+    }
     globalData = await res.json();
     renderGlobalAggregate();
   }
 
   async function loadAll(slug) {
     const qs = slug ? `?round=${slug}` : "";
-    const [dataRes, statsRes] = await Promise.all([
-      fetch(`/api/data${qs}`),
-      fetch(`/api/stats${qs}`),
-    ]);
+    let dataRes, statsRes;
+    try {
+      [dataRes, statsRes] = await Promise.all([
+        loadWithRetry(`/api/data${qs}`),
+        loadWithRetry(`/api/stats${qs}`),
+      ]);
+    } catch (_) {
+      return;
+    }
     appData = await dataRes.json();
     statsData = await statsRes.json();
     currentRoundSlug = appData.round?.slug ?? slug ?? "";
@@ -344,7 +404,7 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
           const isActive = r.slug === currentRoundSlug;
           const cls = ['results-round-pill', isActive ? 'active' : '', isComplete ? 'complete' : ''].filter(Boolean).join(' ');
           const check = isComplete
-            ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+            ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`
             : "";
           const counter = userId && progress > 0
             ? `<span class="progress-count">${isComplete ? "10/10" : `${progress}/10`}</span>`
@@ -571,6 +631,25 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
 
           const rawTotal = (s.left || 0) + (s.right || 0) + (s.tie || 0);
 
+          const voteBody = rawTotal === 0
+            ? `<div style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.75rem 0; flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; color: var(--fg-dim);">No votes yet</span>
+                <a href="/vote?round=${currentRoundSlug}" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 6px; border: 1px solid #f59e0b; color: #f59e0b; font-size: 0.75rem; font-weight: 600; text-decoration: none; transition: background 0.15s;" onmouseover="this.style.background='rgba(245,158,11,0.08)'" onmouseout="this.style.background='transparent'">Be the first →</a>
+              </div>`
+            : `<div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden;">
+                  <div style="width: ${aPct}%; background: #f59e0b; transition: width 0.5s; min-width: ${aVotes ? "2%" : "0"};"></div>
+                  <div style="width: ${tiePct}%; background: #eab308; transition: width 0.5s; min-width: ${tieVotes ? "2%" : "0"};"></div>
+                  <div style="width: ${bPct}%; background: #0ea5e9; transition: width 0.5s; min-width: ${bVotes ? "2%" : "0"};"></div>
+                </div>
+                <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--fg-dim); flex-wrap: wrap;">
+                  <span>css-bash: <strong style="color: #f59e0b;">${aPct}%</strong> (${aVotes})</span>
+                  <span>Tie: <strong style="color: #eab308;">${tiePct}%</strong> (${tieVotes})</span>
+                  <span>vanilla: <strong style="color: #0ea5e9;">${bPct}%</strong> (${bVotes})</span>
+                  <span style="margin-left: auto;">${rawTotal} votes</span>
+                </div>
+              </div>`;
+
           return `
           <div style="margin-bottom: 1.5rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-secondary);">
             <div class="challenge-row-header" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
@@ -581,20 +660,7 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
               </div>
               ${judgeBadge}
             </div>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div style="display: flex; gap: 4px; height: 24px; border-radius: 6px; overflow: hidden;">
-                <div style="width: ${aPct}%; background: #f59e0b; transition: width 0.5s; min-width: ${aVotes ? "2%" : "0"};"></div>
-                <div style="width: ${tiePct}%; background: #eab308; transition: width 0.5s; min-width: ${tieVotes ? "2%" : "0"};"></div>
-                <div style="width: ${bPct}%; background: #0ea5e9; transition: width 0.5s; min-width: ${bVotes ? "2%" : "0"};"></div>
-                ${rawTotal === 0 ? '<div style="width: 100%; background: var(--line);"></div>' : ""}
-              </div>
-              <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--fg-dim); flex-wrap: wrap;">
-                <span>css-bash: <strong style="color: #f59e0b;">${aPct}%</strong> (${aVotes})</span>
-                <span>Tie: <strong style="color: #eab308;">${tiePct}%</strong> (${tieVotes})</span>
-                <span>vanilla: <strong style="color: #0ea5e9;">${bPct}%</strong> (${bVotes})</span>
-                <span style="margin-left: auto;">${rawTotal} votes</span>
-              </div>
-            </div>
+            ${voteBody}
           </div>`;
         })
         .join("");
@@ -627,11 +693,18 @@ const roundSlug = Astro.url.searchParams.get("round") ?? "";
     }
   }
 
-  window.addEventListener("popstate", () => {
-    const slug = new URLSearchParams(window.location.search).get("round") ?? "";
-    loadAll(slug);
-  });
+  document.addEventListener("astro:page-load", () => {
+    currentRoundSlug = initialRoundSlug;
+    appData = null;
+    statsData = null;
+    globalData = null;
 
-  loadGlobal();
-  loadAll(currentRoundSlug);
+    window.addEventListener("popstate", () => {
+      const slug = new URLSearchParams(window.location.search).get("round") ?? "";
+      loadAll(slug);
+    });
+
+    loadGlobal();
+    loadAll(currentRoundSlug);
+  });
 </script>

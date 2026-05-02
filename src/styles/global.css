@@ -77,6 +77,12 @@ body {
   color: var(--shiki-light, var(--shiki-default));
 }
 
+/* Focus-visible ring — all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
 /* Mobile responsive helpers */
 @media (max-width: 640px) {
   .stats-grid {

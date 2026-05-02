@@ -1,6 +1,6 @@
 ---
 import { SignInButton } from "@clerk/astro/components";
-import { eq } from "drizzle-orm";
+import { count, countDistinct, eq, max } from "drizzle-orm";
 
 import { CrafterStationLogo } from "../components/CrafterStationLogo";
 import Header from "../components/Header.astro";
@@ -62,6 +62,43 @@ if (isSignedIn && userId) {
 
 const hasProgress = totalVoted > 0 && totalVoted < 60;
 const isFullyDone = totalVoted >= 60;
+
+let totalCommunityVotes = 0;
+let totalVoters = 0;
+let latestVoteAt: Date | null = null;
+
+try {
+  const [statsRow] = await db
+    .select({
+      totalVotes: count(),
+      uniqueVoters: countDistinct(votes.userId),
+      lastVote: max(votes.createdAt),
+    })
+    .from(votes);
+  if (statsRow) {
+    totalCommunityVotes = statsRow.totalVotes;
+    totalVoters = statsRow.uniqueVoters;
+    latestVoteAt = statsRow.lastVote ? new Date(statsRow.lastVote) : null;
+  }
+} catch {
+  // silent — defaults stay 0/0/null
+}
+
+function relativeTime(date: Date | null): string {
+  if (!date) return "";
+  const diffMs = Date.now() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return "just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  return `${diffDays}d ago`;
+}
+
+const isLive = latestVoteAt !== null && Date.now() - latestVoteAt.getTime() < 5 * 60 * 1000;
+const showSocialProof = totalCommunityVotes > 0;
 ---
 
 <Layout title="css-bash">
@@ -190,6 +227,30 @@ const isFullyDone = totalVoted >= 60;
             </>
           )}
         </div>
+
+        {showSocialProof && (
+          <div class="mx-auto mt-1 flex max-w-[520px] items-center justify-center gap-1.5 text-xs text-[var(--fg-dim)]">
+            {isLive && (
+              <span class="relative flex h-2 w-2 shrink-0">
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style="background:#10b981"></span>
+                <span class="relative inline-flex h-2 w-2 rounded-full" style="background:#10b981"></span>
+              </span>
+            )}
+            <span>
+              <strong class="text-[var(--fg)]">{totalCommunityVotes}</strong> community votes
+            </span>
+            <span class="text-[var(--line)]">·</span>
+            <span>
+              <strong class="text-[var(--fg)]">{totalVoters}</strong> voters
+            </span>
+            {latestVoteAt && (
+              <>
+                <span class="text-[var(--line)]">·</span>
+                <span>last vote {relativeTime(latestVoteAt)}</span>
+              </>
+            )}
+          </div>
+        )}
 
         <div class="flex w-full max-w-[640px] flex-wrap items-baseline justify-center gap-x-6 gap-y-2 text-[var(--fg-dim)] text-sm">
           <span class="inline-flex items-baseline gap-1.5">
