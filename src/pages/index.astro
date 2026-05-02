@@ -121,6 +121,12 @@ const isFullyDone = totalVoted >= 60;
                 >
                   See community results
                 </a>
+                <a
+                  href="/vote"
+                  class="inline-flex items-center text-sm font-medium text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors px-2 py-2.5"
+                >
+                  Revisit votes
+                </a>
               </>
             ) : hasProgress && resumeSlug ? (
               <>
@@ -135,6 +141,12 @@ const isFullyDone = totalVoted >= 60;
                   class="inline-flex items-center rounded-lg border border-[var(--line)] bg-transparent px-6 py-2.5 text-sm font-semibold text-[var(--fg)] no-underline hover:border-[var(--fg)] transition-colors"
                 >
                   See your results
+                </a>
+                <a
+                  href="/vote"
+                  class="inline-flex items-center text-sm font-medium text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors px-2 py-2.5"
+                >
+                  All challenges
                 </a>
                 <a
                   href="/results"

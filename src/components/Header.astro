@@ -61,6 +61,15 @@ function formatStars(n: number): string {
         </span>
       </a>
 
+      {isSignedIn && (
+        <a
+          href="/vote"
+          class="text-sm text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
+        >
+          Vote
+        </a>
+      )}
+
       <a
         href="/results"
         class="text-sm text-[var(--fg-dim)] no-underline hover:text-[var(--fg)] transition-colors"
